@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>zaevo — terminal</title>
+<style>
+  :root {
+    --bg:#0e0b09;--bg1:#161210;--bg2:#1e1814;--bg3:#261e18;
+    --border:#2e231c;--border2:#3d3028;
+    --red:#b84c3a;--red-dim:#7a3228;--red-mute:#3d1f18;
+    --amber:#c47c2e;--amber-dim:#8a5420;
+    --text:#e8ddd5;--text2:#a89888;--text3:#6a5a50;
+    --green:#5a8a4a;--green-dim:#2e4a22;
+    --mono:'JetBrains Mono','Fira Code','Cascadia Code',monospace;
+    --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);overflow:hidden;}
+
+  /* ── Topbar ── */
+  #topbar{height:28px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:0;position:relative;z-index:100;}
+  .tb-left{display:flex;align-items:center;gap:8px;flex:1;}
+  .tb-logo{color:var(--red);font-size:11px;font-weight:700;letter-spacing:.08em;}
+  .tb-sep{color:var(--border2);font-size:11px;}
+  .tb-ws-list{display:flex;gap:2px;}
+  .tb-ws{font-size:11px;color:var(--text3);padding:2px 8px;border-radius:3px;cursor:pointer;text-decoration:none;letter-spacing:.02em;transition:color .1s;}
+  .tb-ws:hover{color:var(--text2);}
+  .tb-ws.active{color:var(--red);background:var(--red-mute);}
+  .tb-right{display:flex;align-items:center;gap:12px;}
+  .tb-clock{font-size:11px;color:var(--text3);letter-spacing:.05em;}
+  .tb-tag{font-size:10px;color:var(--text3);letter-spacing:.1em;}
+
+  /* ── Grid ── */
+  #workspace{
+    position:absolute;top:28px;left:0;right:0;bottom:20px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:3fr 1fr;
+    gap:2px;padding:2px;background:var(--bg);
+  }
+
+  /* ── Panels ── */
+  .panel{background:var(--bg1);border:1px solid var(--border);overflow:hidden;position:relative;display:flex;flex-direction:column;}
+  .panel-header{height:26px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0;}
+  .ph-tag{font-size:10px;color:var(--red);letter-spacing:.12em;text-transform:uppercase;}
+  .ph-title{font-size:11px;color:var(--text3);}
+  .ph-dot{width:5px;height:5px;border-radius:50%;background:var(--red-dim);flex-shrink:0;}
+  .panel-body{flex:1;padding:14px;overflow:auto;}
+
+  /* ── Statusbar ── */
+  #statusbar{position:fixed;bottom:0;left:0;right:0;height:20px;background:var(--red);display:flex;align-items:center;padding:0 10px;gap:16px;z-index:100;}
+  .sb-item{font-size:10px;color:rgba(255,255,255,.85);letter-spacing:.06em;}
+  .sb-sep{color:rgba(255,255,255,.3);font-size:10px;}
+  .sb-right{margin-left:auto;display:flex;gap:12px;}
+
+  /* ─────────────── SHELL PANEL ─────────────── */
+  #shell { grid-column:1; grid-row:1; }
+  .shell-output {
+    font-size: 11px;
+    line-height: 1.75;
+    color: var(--text2);
+  }
+  .shell-output .ln { display: flex; gap: 6px; }
+  .shell-output .ln .ps1 { color: var(--red); white-space: nowrap; flex-shrink: 0; }
+  .shell-output .ln .cmd { color: var(--text); }
+  .shell-output .ln .arg { color: var(--amber); }
+  .shell-output .ln .flag { color: var(--text3); }
+  .shell-output .out { color: var(--text3); padding-left: 4px; }
+  .shell-output .out.hi { color: var(--text2); }
+  .shell-output .out.val { color: var(--green); }
+  .shell-output .out.err { color: var(--red); }
+  .shell-output .out.sep { color: var(--border2); }
+  .shell-output .blank { height: 6px; }
+  .shell-cursor-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .shell-cursor-ps1 { font-size: 11px; color: var(--red); }
+  .shell-cursor {
+    display: inline-block;
+    width: 7px; height: 14px;
+    background: var(--red);
+    vertical-align: middle;
+    animation: blink 1.1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+
+  /* ─────────────── FILESYSTEM PANEL ─────────────── */
+  #filesystem { grid-column:2; grid-row:1; }
+  .fs-tree { font-size: 11px; line-height: 1.8; }
+  .fs-dir { color: var(--amber); }
+  .fs-file { color: var(--text2); }
+  .fs-link { color: var(--green); }
+  .fs-exec { color: var(--red); }
+  .fs-sel { background: var(--red-mute); color: var(--text); padding: 0 4px; border-radius: 2px; }
+  .fs-indent { padding-left: 14px; }
+  .fs-indent2 { padding-left: 28px; }
+  .fs-gutter { color: var(--border2); margin-right: 4px; user-select: none; }
+  .fs-cwd {
+    font-size: 10px;
+    color: var(--text3);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    margin-bottom: 10px;
+    border-radius: 2px;
+  }
+  .fs-cwd span { color: var(--amber); }
+
+  /* ─────────────── LOG PANEL ─────────────── */
+  #log { grid-column:1; grid-row:2; }
+  .log-line { font-size: 10px; line-height: 1.7; display: flex; gap: 8px; }
+  .log-ts { color: var(--text3); flex-shrink: 0; }
+  .log-lvl { width: 36px; flex-shrink: 0; }
+  .log-lvl.ok { color: var(--green); }
+  .log-lvl.inf { color: var(--amber); }
+  .log-lvl.err { color: var(--red); }
+  .log-msg { color: var(--text2); }
+  .log-msg .hi { color: var(--text); }
+
+  /* ─────────────── SYSLOG PANEL ─────────────── */
+  #syslog { grid-column:2; grid-row:2; overflow:hidden; }
+  .syslog-inner {
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.65;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .syslog-inner .hi { color: var(--text2); }
+  .syslog-inner .val { color: var(--amber); }
+  .syslog-inner .ok { color: var(--green); }
+
+  /* ─────────────── MATRIX RAIN OVERLAY ─────────────── */
+  #matrix-canvas {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="tb-left">
+    <span class="tb-logo">󱄅 zaevo</span>
+    <span class="tb-sep">│</span>
+    <nav class="tb-ws-list">
+      <a class="tb-ws" href="ws1.html">1:home</a>
+      <a class="tb-ws" href="ws2.html">2:work</a>
+      <a class="tb-ws active" href="ws3.html">3:term</a>
+      <a class="tb-ws" href="ws4.html">4:signal</a>
+      <a class="tb-ws" href="ws5.html">5:contact</a>
+    </nav>
+  </div>
+  <div class="tb-right">
+    <span class="tb-tag">OMEN-erde</span>
+    <span class="tb-clock" id="clock">00:00:00</span>
+  </div>
+</div>
+
+<div id="workspace">
+
+  <!-- SHELL PANEL -->
+  <div class="panel" id="shell">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">zsh</span>
+      <span class="ph-title">kitty — zaevo@OMEN-erde</span>
+    </div>
+    <div class="panel-body">
+      <canvas id="matrix-canvas"></canvas>
+      <div class="shell-output">
+        <div class="blank"></div>
+        <div class="ln"><span class="ps1">zaevo@OMEN-erde ~</span><span class="cmd">&nbsp;$&nbsp;</span><span class="cmd">fastfetch</span></div>
+        <div class="out sep">┌─────────────────────────────────────────────────┐</div>
+        <div class="out hi">&nbsp;&nbsp;OS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Arch Linux x86_64</div>
+        <div class="out hi">&nbsp;&nbsp;Host&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HP OMEN 16 (OMEN-erde)</div>
+        <div class="out hi">&nbsp;&nbsp;Kernel&nbsp;&nbsp;&nbsp;&nbsp; 6.12.8-zen1-1-zen</div>
+        <div class="out hi">&nbsp;&nbsp;Uptime&nbsp;&nbsp;&nbsp;&nbsp; 47d 12h 09m</div>
+        <div class="out hi">&nbsp;&nbsp;Shell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; zsh 5.9</div>
+        <div class="out hi">&nbsp;&nbsp;WM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; niri (Wayland)</div>
+        <div class="out hi">&nbsp;&nbsp;Terminal&nbsp;&nbsp; kitty 0.36.4</div>
+        <div class="out hi">&nbsp;&nbsp;CPU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AMD Ryzen 7 5800H @ 4.40GHz</div>
+        <div class="out hi">&nbsp;&nbsp;GPU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NVIDIA RTX 3060 (6GB)</div>
+        <div class="out hi">&nbsp;&nbsp;Memory&nbsp;&nbsp;&nbsp;&nbsp; 7.2GiB / 15.5GiB (46%)</div>
+        <div class="out hi">&nbsp;&nbsp;Disk (/)&nbsp;&nbsp; 148GiB / 500GiB (30%)</div>
+        <div class="out sep">└─────────────────────────────────────────────────┘</div>
+        <div class="blank"></div>
+        <div class="ln"><span class="ps1">zaevo@OMEN-erde ~</span><span class="cmd">&nbsp;$&nbsp;</span><span class="cmd">ls</span><span class="flag"> -la</span><span class="arg"> ~/projects</span></div>
+        <div class="out">total 28</div>
+        <div class="out hi">drwxr-xr-x  zaevo zaevo  <span style="color:var(--amber)">zaOS/</span></div>
+        <div class="out hi">drwxr-xr-x  zaevo zaevo  <span style="color:var(--amber)">quickshell-config/</span></div>
+        <div class="out hi">drwxr-xr-x  zaevo zaevo  <span style="color:var(--amber)">terminal-portfolio/</span></div>
+        <div class="out hi">drwxr-xr-x  zaevo zaevo  <span style="color:var(--amber)">svg-readme-gen/</span></div>
+        <div class="out hi">-rwxr-xr-x  zaevo zaevo  <span style="color:var(--red)">deploy.sh</span></div>
+        <div class="out hi">-rw-r--r--  zaevo zaevo  <span style="color:var(--text2)">README.md</span></div>
+        <div class="blank"></div>
+        <div class="ln"><span class="ps1">zaevo@OMEN-erde ~</span><span class="cmd">&nbsp;$&nbsp;</span><span class="cmd">git</span><span class="arg"> log</span><span class="flag"> --oneline -5</span></div>
+        <div class="out val">a3f9c12 feat: animated SVG profile README</div>
+        <div class="out hi">9b2e041 fix: niri keybind IPC edge case</div>
+        <div class="out hi">c7d8f30 refactor: zaOS semantic layer v2</div>
+        <div class="out hi">01a4e7b chore: update quickshell QML surfaces</div>
+        <div class="out hi">f2b9d18 docs: add xattr design notes</div>
+        <div class="blank"></div>
+        <div class="ln"><span class="ps1">zaevo@OMEN-erde ~</span><span class="cmd">&nbsp;$&nbsp;</span><span class="cmd">systemctl</span><span class="flag"> --user</span><span class="arg"> status pipewire</span></div>
+        <div class="out"><span class="ok">● pipewire.service</span> - PipeWire Multimedia Service</div>
+        <div class="out hi">&nbsp;&nbsp;&nbsp;Loaded: loaded (/usr/lib/systemd/user/pipewire.service)</div>
+        <div class="out val">&nbsp;&nbsp;&nbsp;Active: active (running) since Mon 2025-11-18</div>
+        <div class="blank"></div>
+      </div>
+      <div class="shell-cursor-row">
+        <span class="shell-cursor-ps1">zaevo@OMEN-erde ~ $ </span>
+        <span class="shell-cursor"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILESYSTEM PANEL -->
+  <div class="panel" id="filesystem">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">fs</span>
+      <span class="ph-title">~/projects — tree</span>
+    </div>
+    <div class="panel-body">
+      <div class="fs-cwd">cwd: <span>~/projects/svg-readme-gen</span></div>
+      <div class="fs-tree">
+        <div><span class="fs-gutter">▾</span><span class="fs-dir">svg-readme-gen/</span></div>
+        <div class="fs-indent"><span class="fs-gutter">▾</span><span class="fs-dir">.github/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">▾</span><span class="fs-dir">workflows/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">update-readme.yml</span></div>
+        <div class="fs-indent"><span class="fs-gutter">▾</span><span class="fs-dir">src/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-exec">generate.py</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">template_dark.svg</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">template_light.svg</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">stats.py</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">fonts.py</span></div>
+        <div class="fs-indent"><span class="fs-gutter">▾</span><span class="fs-dir">out/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-link">dark.svg → src/template_dark.svg</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-link">light.svg → src/template_light.svg</span></div>
+        <div class="fs-indent"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">requirements.txt</span></div>
+        <div class="fs-indent"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">README.md</span></div>
+        <div class="fs-indent"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-exec fs-sel">Makefile</span></div>
+        <div class="fs-indent"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">.gitignore</span></div>
+        <br>
+        <div><span class="fs-gutter">▾</span><span class="fs-dir">zaOS/</span></div>
+        <div class="fs-indent"><span class="fs-gutter">▾</span><span class="fs-dir">docs/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">semantic-fs.md</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">xattr-design.md</span></div>
+        <div class="fs-indent"><span class="fs-gutter">▾</span><span class="fs-dir">kernel/</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-exec">boot.asm</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">mm.c</span></div>
+        <div class="fs-indent2"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-file">vfs.c</span></div>
+        <div class="fs-indent"><span class="fs-gutter">&nbsp;&nbsp;</span><span class="fs-exec">Makefile</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG PANEL -->
+  <div class="panel" id="log">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">log</span>
+      <span class="ph-title">journalctl -f</span>
+    </div>
+    <div class="panel-body" style="padding:10px 12px;">
+      <div class="log-line"><span class="log-ts" id="lt0">00:00:00</span><span class="log-lvl ok">OK</span><span class="log-msg">niri compositor started on wayland display <span class="hi">wayland-1</span></span></div>
+      <div class="log-line"><span class="log-ts" id="lt1">00:00:00</span><span class="log-lvl ok">OK</span><span class="log-msg">pipewire session manager <span class="hi">wireplumber</span> ready</span></div>
+      <div class="log-line"><span class="log-ts" id="lt2">00:00:00</span><span class="log-lvl inf">INF</span><span class="log-msg">quickshell: loading QML surface <span class="hi">top-bar</span></span></div>
+      <div class="log-line"><span class="log-ts" id="lt3">00:00:00</span><span class="log-lvl inf">INF</span><span class="log-msg">quickshell: loading QML surface <span class="hi">panel</span></span></div>
+      <div class="log-line"><span class="log-ts" id="lt4">00:00:00</span><span class="log-lvl ok">OK</span><span class="log-msg">NetworkManager: connection <span class="hi">eduroam</span> active</span></div>
+      <div class="log-line"><span class="log-ts" id="lt5">00:00:00</span><span class="log-lvl inf">INF</span><span class="log-msg">github-actions: workflow <span class="hi">update-readme</span> dispatched</span></div>
+    </div>
+  </div>
+
+  <!-- SYSLOG PANEL -->
+  <div class="panel" id="syslog">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">sys</span>
+      <span class="ph-title">sysinfo.live</span>
+    </div>
+    <div class="panel-body" style="padding:10px 12px;">
+      <div class="syslog-inner" id="sysinfo">
+        <div>cpu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="val">23%</span>&nbsp;&nbsp; <span id="cpu-bar">████░░░░░░░░░░░░░░░░</span></div>
+        <div>mem&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="val">46%</span>&nbsp;&nbsp; <span id="mem-bar">█████████░░░░░░░░░░░</span></div>
+        <div>gpu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="val">8%</span>&nbsp;&nbsp;&nbsp; <span id="gpu-bar">██░░░░░░░░░░░░░░░░░░</span></div>
+        <div>disk&nbsp;&nbsp;&nbsp;&nbsp; <span class="val">30%</span>&nbsp;&nbsp; <span id="dsk-bar">██████░░░░░░░░░░░░░░</span></div>
+        <div>&nbsp;</div>
+        <div>temp&nbsp;&nbsp;&nbsp;&nbsp; <span class="val" id="temp">51°C</span>&nbsp;&nbsp; Ryzen 7 5800H</div>
+        <div>uptime&nbsp;&nbsp; <span class="hi" id="uptime">47d 12h 09m</span></div>
+        <div>load&nbsp;&nbsp;&nbsp;&nbsp; <span class="hi">0.72 0.81 0.94</span></div>
+        <div>procs&nbsp;&nbsp;&nbsp; <span class="val">241</span>&nbsp;&nbsp; running</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="statusbar">
+  <span class="sb-item">WS 3:term</span>
+  <span class="sb-sep">│</span>
+  <span class="sb-item">niri</span>
+  <span class="sb-sep">│</span>
+  <span class="sb-item">4 panels</span>
+  <div class="sb-right">
+    <span class="sb-item">zaevo@OMEN-erde</span>
+    <span class="sb-sep">│</span>
+    <span class="sb-item" id="sb-date"></span>
+  </div>
+</div>
+
+<script>
+// Clock
+function tick(){
+  const n=new Date();
+  const hms=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  document.getElementById('clock').textContent=hms;
+  document.getElementById('sb-date').textContent=n.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
+  // Update log timestamps
+  for(let i=0;i<6;i++){
+    const el=document.getElementById('lt'+i);
+    if(el){
+      const past=new Date(n-((5-i)*3200+Math.floor(Math.random()*800)));
+      el.textContent=[past.getHours(),past.getMinutes(),past.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    }
+  }
+}
+tick(); setInterval(tick,1000);
+
+// Matrix rain
+const canvas=document.getElementById('matrix-canvas');
+const ctx=canvas.getContext('2d');
+const chars='ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01';
+let drops=[];
+function resizeCanvas(){
+  canvas.width=canvas.parentElement.clientWidth;
+  canvas.height=canvas.parentElement.clientHeight;
+  const cols=Math.floor(canvas.width/12);
+  drops=Array(cols).fill(0).map(()=>Math.random()*-50);
+}
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+function drawMatrix(){
+  ctx.fillStyle='rgba(14,11,9,0.05)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#b84c3a';
+  ctx.font='12px JetBrains Mono, monospace';
+  drops.forEach((y,i)=>{
+    const ch=chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(ch,i*12,y*12);
+    if(y*12>canvas.height&&Math.random()>0.975) drops[i]=0;
+    drops[i]+=0.5;
+  });
+}
+setInterval(drawMatrix,80);
+
+// Sysinfo pulse
+function pulseSys(){
+  const cpu=15+Math.floor(Math.random()*45);
+  const mem=43+Math.floor(Math.random()*8);
+  const gpu=5+Math.floor(Math.random()*20);
+  const dsk=30;
+  const temp=48+Math.floor(Math.random()*12);
+  function bar(pct,len=20){
+    const filled=Math.round(pct/100*len);
+    return '█'.repeat(filled)+'░'.repeat(len-filled);
+  }
+  const cpuEl=document.getElementById('cpu-bar');
+  const memEl=document.getElementById('mem-bar');
+  const gpuEl=document.getElementById('gpu-bar');
+  const dskEl=document.getElementById('dsk-bar');
+  if(cpuEl) cpuEl.textContent=bar(cpu);
+  if(memEl) memEl.textContent=bar(mem);
+  if(gpuEl) gpuEl.textContent=bar(gpu);
+  if(dskEl) dskEl.textContent=bar(dsk);
+  const tempEl=document.getElementById('temp');
+  if(tempEl) tempEl.textContent=temp+'°C';
+}
+setInterval(pulseSys,2000);
+</script>
+</body>
+</html>

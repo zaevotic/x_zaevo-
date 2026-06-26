@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>zaevo — home</title>
+<style>
+  :root {
+    --bg:       #0e0b09;
+    --bg1:      #161210;
+    --bg2:      #1e1814;
+    --bg3:      #261e18;
+    --border:   #2e231c;
+    --border2:  #3d3028;
+    --red:      #b84c3a;
+    --red-dim:  #7a3228;
+    --red-mute: #3d1f18;
+    --amber:    #c47c2e;
+    --amber-dim:#8a5420;
+    --text:     #e8ddd5;
+    --text2:    #a89888;
+    --text3:    #6a5a50;
+    --green:    #5a8a4a;
+    --green-dim:#2e4a22;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); overflow: hidden; }
+
+  /* ── Topbar ── */
+  #topbar {
+    height: 28px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 0;
+    position: relative;
+    z-index: 100;
+  }
+  .tb-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .tb-logo { color: var(--red); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+  .tb-sep { color: var(--border2); font-size: 11px; }
+  .tb-ws-list { display: flex; gap: 2px; }
+  .tb-ws {
+    font-size: 11px;
+    color: var(--text3);
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .tb-ws:hover { color: var(--text2); }
+  .tb-ws.active { color: var(--red); background: var(--red-mute); }
+  .tb-right { display: flex; align-items: center; gap: 12px; }
+  .tb-clock { font-size: 11px; color: var(--text3); letter-spacing: 0.05em; }
+  .tb-tag { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; }
+
+  /* ── Grid ── */
+  #workspace {
+    position: absolute;
+    top: 28px; left: 0; right: 0; bottom: 20px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    padding: 2px;
+    background: var(--bg);
+  }
+
+  /* ── Panels ── */
+  .panel {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-header {
+    height: 26px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .ph-tag {
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ph-title { font-size: 11px; color: var(--text3); }
+  .ph-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red-dim); flex-shrink: 0; }
+  .panel-body { flex: 1; padding: 16px; overflow: auto; }
+
+  /* ─────────────── HERO PANEL ─────────────── */
+  #hero { grid-row: 1 / 3; }
+  .hero-pre {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .hero-name {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .hero-handle {
+    font-size: 14px;
+    color: var(--red);
+    margin-bottom: 24px;
+  }
+  .hero-desc {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.8;
+    max-width: 520px;
+    margin-bottom: 28px;
+    font-family: var(--sans);
+  }
+  .hero-desc em { color: var(--red); font-style: normal; }
+  .hero-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .hs-tag {
+    font-size: 10px;
+    color: var(--amber);
+    background: #2a1e0e;
+    border: 1px solid #3d2e14;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+  }
+  .hero-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 7px 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-red {
+    background: var(--red);
+    color: #fff;
+    border: 1px solid var(--red);
+  }
+  .btn-red:hover { background: #ce5b46; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { border-color: var(--text3); color: var(--text); }
+  .hero-watermark {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--bg2);
+    letter-spacing: -0.04em;
+    user-select: none;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .hero-ascii {
+    margin-top: 28px;
+    font-size: 10px;
+    color: var(--border2);
+    line-height: 1.4;
+    user-select: none;
+  }
+
+  /* ─────────────── NOW STATUS ─────────────── */
+  .now-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .now-icon { font-size: 11px; color: var(--red); width: 14px; flex-shrink: 0; margin-top: 1px; }
+  .now-label { font-size: 10px; color: var(--text3); display: block; margin-bottom: 2px; letter-spacing: 0.08em; }
+  .now-val { font-size: 12px; color: var(--text); }
+  .now-val.dim { color: var(--text2); }
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 5px;
+    vertical-align: middle;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .now-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+  .now-playing {
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-top: 6px;
+  }
+  .np-label { font-size: 9px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .np-track { color: var(--text); font-size: 11px; }
+  .np-bar { height: 2px; background: var(--border); margin-top: 6px; border-radius: 1px; }
+  .np-fill { height: 100%; width: 38%; background: var(--red); border-radius: 1px; }
+
+  /* ─────────────── CURRENT FOCUS ─────────────── */
+  .focus-item {
+    border-left: 2px solid var(--red-dim);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background: var(--bg2);
+  }
+  .fi-title { font-size: 12px; color: var(--text); margin-bottom: 3px; }
+  .fi-sub { font-size: 10px; color: var(--text3); }
+  .fi-tag {
+    display: inline-block;
+    font-size: 9px;
+    color: var(--amber);
+    background: #2a1e0e;
+    border: 1px solid #3d2e14;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-top: 5px;
+    letter-spacing: 0.06em;
+  }
+  .focus-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .focus-counter { font-size: 10px; color: var(--text3); }
+
+  /* ─────────────── AVAILABILITY ─────────────── */
+  .avail-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 3px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .avail-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .avail-text { font-size: 11px; color: #8dc47a; }
+  .avail-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .avail-k { font-size: 10px; color: var(--text3); }
+  .avail-v { font-size: 10px; color: var(--text2); text-align: right; }
+  .avail-note {
+    margin-top: 12px;
+    font-size: 10px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    line-height: 1.6;
+    font-family: var(--sans);
+  }
+
+  /* ── Statusbar ── */
+  #statusbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 20px;
+    background: var(--red);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 16px;
+    z-index: 100;
+  }
+  .sb-item { font-size: 10px; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; }
+  .sb-sep { color: rgba(255,255,255,0.3); font-size: 10px; }
+  .sb-right { margin-left: auto; display: flex; gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="tb-left">
+    <span class="tb-logo">󱄅 zaevo</span>
+    <span class="tb-sep">│</span>
+    <nav class="tb-ws-list">
+      <a class="tb-ws active" href="ws1.html">1:home</a>
+      <a class="tb-ws" href="ws2.html">2:work</a>
+      <a class="tb-ws" href="ws3.html">3:term</a>
+      <a class="tb-ws" href="ws4.html">4:signal</a>
+      <a class="tb-ws" href="ws5.html">5:contact</a>
+    </nav>
+  </div>
+  <div class="tb-right">
+    <span class="tb-tag">OMEN-erde</span>
+    <span class="tb-clock" id="clock">00:00:00</span>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div id="workspace">
+
+  <!-- HERO PANEL (spans full left col) -->
+  <div class="panel" id="hero">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">~</span>
+      <span class="ph-title">hero.md</span>
+    </div>
+    <div class="panel-body">
+      <p class="hero-pre">// portfolio · v0.4.2 · arch linux</p>
+      <h1 class="hero-name">zaevo</h1>
+      <p class="hero-handle">@serpmillers · IIT Jodhpur · CS Eng</p>
+      <p class="hero-desc">
+        Engineering student building things at the intersection of <em>systems</em>, <em>security</em>, and <em>developer tooling</em>.
+        Obsessed with Linux internals, terminal aesthetics, and making tools that feel right to use.
+        Bug bounty hunter in the making.
+      </p>
+      <div class="hero-stack">
+        <span class="hs-tag">Rust</span>
+        <span class="hs-tag">Python</span>
+        <span class="hs-tag">TypeScript</span>
+        <span class="hs-tag">C/C++</span>
+        <span class="hs-tag">Arch Linux</span>
+        <span class="hs-tag">Tauri</span>
+        <span class="hs-tag">React</span>
+        <span class="hs-tag">Bash</span>
+        <span class="hs-tag">Niri</span>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn-red" href="ws2.html">view projects →</a>
+        <a class="btn btn-ghost" href="ws5.html">get in touch</a>
+        <a class="btn btn-ghost" href="ws3.html">open terminal</a>
+      </div>
+      <pre class="hero-ascii">
+ ╭──────────────────────────────────╮
+ │  sys · OMEN-erde · niri · zsh    │
+ │  uptime · 47d 12h 09m            │
+ ╰──────────────────────────────────╯</pre>
+      <div class="hero-watermark">z</div>
+    </div>
+  </div>
+
+  <!-- NOW STATUS PANEL -->
+  <div class="panel" id="now">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">now</span>
+      <span class="ph-title">status.live</span>
+    </div>
+    <div class="panel-body">
+      <div class="now-row">
+        <span class="now-icon">●</span>
+        <div>
+          <span class="now-label">STATUS</span>
+          <span class="now-val"><span class="status-dot"></span>online</span>
+        </div>
+      </div>
+      <div class="now-row">
+        <span class="now-icon">▸</span>
+        <div>
+          <span class="now-label">LOCATION</span>
+          <span class="now-val dim">Jodhpur, Rajasthan</span>
+        </div>
+      </div>
+      <div class="now-row">
+        <span class="now-icon">⚙</span>
+        <div>
+          <span class="now-label">MACHINE</span>
+          <span class="now-val">OMEN-erde / Arch Linux</span>
+        </div>
+      </div>
+      <div class="now-row">
+        <span class="now-icon">♪</span>
+        <div>
+          <span class="now-label">LISTENING TO</span>
+          <div class="now-playing">
+            <p class="np-label">SPOTIFY</p>
+            <p class="np-track">Daft Punk — Something About Us</p>
+            <div class="np-bar"><div class="np-fill"></div></div>
+          </div>
+        </div>
+      </div>
+      <hr class="now-divider">
+      <div class="now-row">
+        <span class="now-icon">✎</span>
+        <div>
+          <span class="now-label">LAST COMMIT</span>
+          <span class="now-val dim">feat: animated SVG profile README</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURRENT FOCUS PANEL -->
+  <div class="panel" id="focus">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">focus</span>
+      <span class="ph-title">current_focus.txt</span>
+    </div>
+    <div class="panel-body">
+      <div class="focus-header-row">
+        <span style="font-size:10px;color:var(--text3)">// active workstreams</span>
+        <span class="focus-counter">3 active</span>
+      </div>
+      <div class="focus-item">
+        <p class="fi-title">Animated SVG GitHub README</p>
+        <p class="fi-sub">fastfetch theme · GraphQL stats · GitHub Actions</p>
+        <span class="fi-tag">in progress</span>
+      </div>
+      <div class="focus-item">
+        <p class="fi-title">Quickshell Desktop Shell</p>
+        <p class="fi-sub">QML · Niri compositor · warm dark aesthetic</p>
+        <span class="fi-tag">building</span>
+      </div>
+      <div class="focus-item">
+        <p class="fi-title">zaOS Architecture</p>
+        <p class="fi-sub">semantic filesystem · xattr · x86 implementation</p>
+        <span class="fi-tag">research</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY PANEL -->
+  <div class="panel" id="avail">
+    <div class="panel-header">
+      <div class="ph-dot"></div>
+      <span class="ph-tag">avail</span>
+      <span class="ph-title">open_to.cfg</span>
+    </div>
+    <div class="panel-body">
+      <div class="avail-status">
+        <div class="avail-dot"></div>
+        <span class="avail-text">open to opportunities</span>
+      </div>
+      <div class="avail-row">
+        <span class="avail-k">internships</span>
+        <span class="avail-v" style="color:var(--green)">yes</span>
+      </div>
+      <div class="avail-row">
+        <span class="avail-k">open source collab</span>
+        <span class="avail-v" style="color:var(--green)">yes</span>
+      </div>
+      <div class="avail-row">
+        <span class="avail-k">freelance</span>
+        <span class="avail-v" style="color:var(--amber)">selective</span>
+      </div>
+      <div class="avail-row">
+        <span class="avail-k">full-time</span>
+        <span class="avail-v" style="color:var(--text3)">2027</span>
+      </div>
+      <div class="avail-row">
+        <span class="avail-k">response time</span>
+        <span class="avail-v">~24–48h</span>
+      </div>
+      <p class="avail-note">
+        Preferably systems / security / tooling roles. Drop a message on the contact workspace.
+      </p>
+    </div>
+  </div>
+
+</div><!-- /workspace -->
+
+<!-- STATUSBAR -->
+<div id="statusbar">
+  <span class="sb-item">WS 1:home</span>
+  <span class="sb-sep">│</span>
+  <span class="sb-item">niri</span>
+  <span class="sb-sep">│</span>
+  <span class="sb-item">4 panels</span>
+  <div class="sb-right">
+    <span class="sb-item">zaevo@OMEN-erde</span>
+    <span class="sb-sep">│</span>
+    <span class="sb-item" id="sb-date"></span>
+  </div>
+</div>
+
+<script>
+function tick() {
+  const now = new Date();
+  const hms = [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(n => String(n).padStart(2,'0')).join(':');
+  document.getElementById('clock').textContent = hms;
+  const date = now.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short' });
+  document.getElementById('sb-date').textContent = date;
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>zaevo — void</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0908;
+    --panel:#120d0c;
+    --panel-alt:#161010;
+    --border:#2b1414;
+    --border-bright:#4a1a1f;
+    --red:#b6182b;
+    --red-ember:#ff2436;
+    --red-dim:#5c1018;
+    --bone:#d9d2c4;
+    --muted:#7a736a;
+    --muted-dim:#4a453f;
+    --mono: 'JetBrains Mono', monospace;
+    --black-letter: 'Pirata One', serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--void); color:var(--bone); font-family:var(--mono); font-size:13px;}
+  body{
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(182,24,43,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(182,24,43,0.06), transparent 60%);
+    min-height:100vh;
+  }
+  ::selection{background:var(--red); color:var(--void);}
+  a{color:inherit;}
+
+  /* cut-corner panel shape used everywhere — the signature element */
+  .cut{
+    clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  }
+  .cut-sm{
+    clip-path: polygon(0 6px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  }
+
+  /* ===== top bar ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 18px; height:46px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, #100b0a, #0a0908);
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--black-letter);
+    font-size:22px; letter-spacing:1px; color:var(--bone);
+    text-shadow: 0 0 14px rgba(255,36,54,0.35);
+    animation: flicker 7s infinite steps(1);
+  }
+  .brand .glyph{
+    width:16px;height:16px; background:var(--red);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    box-shadow:0 0 10px var(--red-ember);
+  }
+  @keyframes flicker{
+    0%,92%,100%{opacity:1; text-shadow:0 0 14px rgba(255,36,54,0.35);}
+    93%{opacity:0.85; text-shadow:none;}
+    94%{opacity:1; text-shadow:0 0 20px rgba(255,36,54,0.55);}
+    95%{opacity:0.9;}
+  }
+  .tabs{display:flex; gap:2px; height:100%;}
+  .tab{
+    display:flex; align-items:center; height:100%; padding:0 16px;
+    color:var(--muted); font-size:12px; letter-spacing:.5px; cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:.15s;
+  }
+  .tab:hover{color:var(--bone);}
+  .tab.active{color:var(--red-ember); border-bottom:2px solid var(--red); background:rgba(182,24,43,0.06);}
+  .tab .num{color:var(--muted-dim); margin-right:6px;}
+  .tab.active .num{color:var(--red);}
+  .sysclock{color:var(--muted); font-size:11px; letter-spacing:.5px;}
+  .sysclock b{color:var(--red-ember); font-weight:600;}
+
+  /* ===== layout ===== */
+  main{padding:16px; display:none; max-width:1500px; margin:0 auto;}
+  main.active{display:block;}
+  .grid{display:grid; gap:14px;}
+  .g2{grid-template-columns: 1.4fr 1fr;}
+  .g3{grid-template-columns: 1fr 1fr 1fr;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+  }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 14px; border-bottom:1px solid var(--border);
+    background:var(--panel-alt);
+  }
+  .panel-head .lbl{
+    font-size:10.5px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel-head .lbl .dagger{color:var(--red); font-size:12px;}
+  .panel-head .lbl b{color:var(--bone); font-weight:600; letter-spacing:1px;}
+  .panel-head .meta{font-size:10px; color:var(--muted-dim);}
+  .panel-body{padding:16px;}
+
+  /* ===== HOME ===== */
+  .hero-wordmark{
+    font-family:var(--black-letter);
+    font-size:64px; line-height:1; color:var(--bone);
+    text-shadow:0 0 30px rgba(255,36,54,0.25);
+    margin:6px 0 4px;
+  }
+  .eyebrow{color:var(--red); font-size:11px; letter-spacing:3px; text-transform:uppercase;}
+  .subline{color:var(--muted); font-size:12px; margin-top:8px;}
+  .subline b{color:var(--red-ember); font-weight:500;}
+  .bio{color:var(--bone); font-size:13px; line-height:1.75; margin:18px 0; max-width:60ch; opacity:.9;}
+  .bio .hl{color:var(--red-ember);}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 22px;}
+  .tag{
+    border:1px solid var(--border-bright); color:var(--muted); font-size:10.5px;
+    padding:5px 10px; letter-spacing:.5px;
+  }
+  .btnrow{display:flex; gap:10px;}
+  .btn{
+    padding:11px 18px; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border-bright); color:var(--bone); cursor:pointer; background:transparent;
+  }
+  .btn.primary{background:var(--red); border-color:var(--red); color:#150606; font-weight:700;}
+  .btn.primary:hover{background:var(--red-ember); border-color:var(--red-ember);}
+  .btn:hover{border-color:var(--red); color:var(--red-ember);}
+
+  .stat-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:11.5px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row .k{color:var(--muted);}
+  .stat-row .v{color:var(--bone);}
+  .dot{width:6px;height:6px; border-radius:50%; display:inline-block; margin-right:7px;}
+  .dot.on{background:var(--red-ember); box-shadow:0 0 8px var(--red-ember);}
+
+  .workstream{
+    border-left:2px solid var(--red-dim); padding:10px 12px; margin-bottom:10px; background:rgba(182,24,43,0.03);
+  }
+  .workstream:last-child{margin-bottom:0;}
+  .workstream .t{font-size:12.5px; color:var(--bone); font-weight:600;}
+  .workstream .d{font-size:10.5px; color:var(--muted); margin:4px 0 8px;}
+  .pill{font-size:9.5px; letter-spacing:.5px; text-transform:uppercase; padding:2px 7px; border:1px solid var(--border-bright); color:var(--red-ember);}
+
+  .avail-bar{
+    background:linear-gradient(90deg, rgba(182,24,43,0.14), transparent);
+    border:1px solid var(--border-bright); padding:12px 14px; display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  }
+  .avail-bar .dot.on{background:#7a3; box-shadow:0 0 8px #7a3;}
+  .avail-bar span{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--bone);}
+
+  /* ===== WORK ===== */
+  .filters{display:flex; gap:8px; margin-bottom:16px;}
+  .filter{
+    padding:7px 14px; font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border-bright); color:var(--muted); cursor:pointer;
+  }
+  .filter.active{color:var(--red-ember); border-color:var(--red); background:rgba(182,24,43,0.08);}
+
+  .proj-card{margin-bottom:14px;}
+  .proj-top{display:flex; align-items:center; justify-content:space-between;}
+  .proj-title{font-size:14px; font-weight:700; color:var(--bone); letter-spacing:.3px;}
+  .proj-badges{display:flex; gap:6px;}
+  .badge{font-size:9px; letter-spacing:.5px; padding:3px 7px; text-transform:uppercase;}
+  .badge.shipped{color:#7a9; border:1px solid #2a4a35;}
+  .badge.wip{color:var(--red-ember); border:1px solid var(--border-bright);}
+  .proj-desc{font-size:12px; color:var(--muted); margin:8px 0 12px; line-height:1.6;}
+  .why{border-top:1px solid var(--border); padding-top:10px; margin-top:4px;}
+  .why .lbl2{font-size:10px; color:var(--red); letter-spacing:1.5px; margin-bottom:8px;}
+  .why-line{font-size:11.5px; color:var(--bone); opacity:.85; margin-bottom:6px; padding-left:14px; position:relative; line-height:1.6;}
+  .why-line::before{content:'→'; position:absolute; left:0; color:var(--red-dim);}
+  .why-line b{color:var(--red-ember); font-weight:500;}
+  .proj-stack{display:flex; gap:6px; margin-top:12px;}
+  .chip{font-size:9.5px; color:var(--muted); border:1px solid var(--border); padding:3px 8px;}
+
+  .heatgrid{display:grid; grid-template-columns:repeat(26,1fr); gap:3px; margin-top:10px;}
+  .hcell{aspect-ratio:1; background:var(--border);}
+  .hcell.l1{background:#3a1015;}
+  .hcell.l2{background:var(--red-dim);}
+  .hcell.l3{background:var(--red);}
+  .hcell.l4{background:var(--red-ember); box-shadow:0 0 4px var(--red-ember);}
+
+  .wakabar{margin-bottom:11px;}
+  .wakabar .row{display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px;}
+  .wakabar .row .lang{color:var(--bone);}
+  .wakabar .row .pct{color:var(--muted);}
+  .wtrack{height:5px; background:var(--panel-alt); border:1px solid var(--border);}
+  .wfill{height:100%; background:linear-gradient(90deg, var(--red-dim), var(--red-ember));}
+
+  /* ===== JOURNAL ===== */
+  .jgrid{display:grid; grid-template-columns:320px 1fr; gap:14px;}
+  .jentry{padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer;}
+  .jentry:hover{background:rgba(182,24,43,0.04);}
+  .jentry.active{background:rgba(182,24,43,0.08); border-left:2px solid var(--red);}
+  .jentry .jnum{font-size:9.5px; color:var(--red-dim); letter-spacing:1px;}
+  .jentry .jtitle{font-size:12.5px; color:var(--bone); margin:5px 0 7px; line-height:1.4;}
+  .jentry .jtags span{font-size:9px; color:var(--muted); border:1px solid var(--border); padding:2px 6px; margin-right:5px;}
+  .jbody h1{font-family:var(--black-letter); font-size:30px; color:var(--bone); font-weight:400; margin-bottom:16px;}
+  .jbody p{font-size:12.5px; color:var(--bone); opacity:.85; line-height:1.85; margin-bottom:12px;}
+  .jbody .callout{border-left:2px solid var(--red); padding-left:14px; margin:16px 0; color:var(--muted); font-size:11.5px;}
+
+  /* ===== TERMINAL ===== */
+  .term-line{font-size:12px; margin-bottom:5px; line-height:1.7;}
+  .term-prompt{color:var(--red-ember);}
+  .term-path{color:var(--muted);}
+  .term-out{color:var(--muted); padding-left:0; margin-bottom:12px;}
+  .term-out .k{color:var(--muted-dim); display:inline-block; width:80px;}
+  .tree-line{font-size:11.5px; color:var(--muted); line-height:1.9;}
+  .tree-line .f{color:var(--red-ember);}
+  .sysmeter{display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:11px;}
+  .sysmeter .k{width:40px; color:var(--muted);}
+  .sysmeter .track{flex:1; height:6px; background:var(--panel-alt); border:1px solid var(--border);}
+  .sysmeter .fill{height:100%; background:var(--red);}
+  .sysmeter .v{width:36px; text-align:right; color:var(--bone);}
+  .log-line{font-size:11px; margin-bottom:5px; color:var(--muted);}
+  .log-line .tag{color:var(--red-ember); margin:0 8px;}
+
+  /* ===== CONTACT ===== */
+  .cgrid{display:grid; grid-template-columns:1.3fr 1fr; gap:14px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:10.5px; color:var(--red); letter-spacing:1px; margin-bottom:7px;}
+  .field label::before{content:'$ '; color:var(--muted-dim);}
+  .field input, .field textarea{
+    width:100%; background:var(--void); border:1px solid var(--border-bright); color:var(--bone);
+    padding:10px 12px; font-family:var(--mono); font-size:12px;
+  }
+  .field textarea{resize:vertical; min-height:90px;}
+  .field input::placeholder, .field textarea::placeholder{color:var(--muted-dim);}
+  .channel{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--border);
+  }
+  .channel:last-child{border-bottom:none;}
+  .channel .icon{
+    width:30px; height:30px; border:1px solid var(--border-bright); display:flex; align-items:center; justify-content:center;
+    color:var(--red-ember); font-size:13px;
+  }
+  .channel .name{font-size:11.5px; color:var(--bone); letter-spacing:.5px;}
+  .channel .handle{font-size:10.5px; color:var(--muted);}
+
+  /* ===== status bar ===== */
+  .statusbar{
+    display:flex; justify-content:space-between; padding:6px 18px; border-top:1px solid var(--border);
+    background:var(--panel-alt); font-size:10px; color:var(--muted-dim); letter-spacing:.5px;
+    position:sticky; bottom:0;
+  }
+  .statusbar .left{display:flex; gap:16px;}
+  .statusbar b{color:var(--red-ember);}
+
+  @media (max-width:900px){
+    .g2, .g3, .jgrid, .cgrid{grid-template-columns:1fr;}
+    .hero-wordmark{font-size:44px;}
+    .tabs{overflow-x:auto;}
+    .heatgrid{grid-template-columns:repeat(18,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="glyph"></span> zaevo</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="home"><span class="num">1</span>home</div>
+    <div class="tab" data-tab="work"><span class="num">2</span>work</div>
+    <div class="tab" data-tab="journal"><span class="num">3</span>journal</div>
+    <div class="tab" data-tab="term"><span class="num">4</span>term</div>
+    <div class="tab" data-tab="contact"><span class="num">5</span>contact</div>
+  </div>
+  <div class="sysclock">OMEN-erde · <b>13:04</b></div>
+</div>
+
+<!-- HOME -->
+<main id="home" class="active">
+  <div class="grid g2">
+    <div class="panel cut">
+      <div class="panel-head">
+        <div class="lbl"><span class="dagger">†</span> ~/ <b>hero.md</b></div>
+        <div class="meta">v0.4.2 · arch linux</div>
+      </div>
+      <div class="panel-body">
+        <div class="eyebrow">portfolio // systems &amp; security</div>
+        <div class="hero-wordmark">zaevo</div>
+        <div class="subline"><b>@serpmillers</b> · IIT Jodhpur · CS Eng</div>
+        <div class="bio">
+          Engineering student building things at the intersection of <span class="hl">systems</span>, <span class="hl">security</span>, and developer tooling.
+          Obsessed with Linux internals, terminal aesthetics, and making tools that feel right to use. Bug bounty hunter in the making.
+        </div>
+        <div class="tags">
+          <div class="tag">Rust</div><div class="tag">Python</div><div class="tag">TypeScript</div>
+          <div class="tag">C/C++</div><div class="tag">Arch Linux</div><div class="tag">Niri</div><div class="tag">Bash</div>
+        </div>
+        <div class="btnrow">
+          <div class="btn primary">view projects →</div>
+          <div class="btn">read journal</div>
+          <div class="btn">open terminal</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>NOW</b> status.live</div></div>
+      <div class="panel-body">
+        <div class="stat-row"><span class="k"><span class="dot on"></span>status</span><span class="v">online</span></div>
+        <div class="stat-row"><span class="k">location</span><span class="v">Jodhpur, Rajasthan</span></div>
+        <div class="stat-row"><span class="k">machine</span><span class="v">OMEN-erde / Arch</span></div>
+        <div class="stat-row"><span class="k">listening to</span><span class="v">Daft Punk — Something About Us</span></div>
+        <div class="stat-row"><span class="k">last commit</span><span class="v">feat: cut-panel UI pass</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:14px;">
+    <div class="panel cut">
+      <div class="panel-head">
+        <div class="lbl"><span class="dagger">†</span> <b>FOCUS</b> current_focus.txt</div>
+        <div class="meta">3 active</div>
+      </div>
+      <div class="panel-body">
+        <div class="workstream">
+          <div class="t">Combined Portfolio UI — v2</div>
+          <div class="d">Merging the workspace shell with the project-card narrative layer</div>
+          <span class="pill">in progress</span>
+        </div>
+        <div class="workstream">
+          <div class="t">Quickshell Desktop Shell</div>
+          <div class="d">QML · Niri compositor · warm dark aesthetic</div>
+          <span class="pill">building</span>
+        </div>
+        <div class="workstream">
+          <div class="t">zaOS Architecture</div>
+          <div class="d">semantic filesystem · xattr · x86 implementation</div>
+          <span class="pill">research</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>AVAIL</b> open_to.cfg</div></div>
+      <div class="panel-body">
+        <div class="avail-bar"><span class="dot on"></span><span>open to opportunities</span></div>
+        <div class="stat-row"><span class="k">internships</span><span class="v">yes</span></div>
+        <div class="stat-row"><span class="k">open source</span><span class="v">yes</span></div>
+        <div class="stat-row"><span class="k">freelance</span><span class="v">selective</span></div>
+        <div class="stat-row"><span class="k">full-time</span><span class="v">2027</span></div>
+        <div class="stat-row"><span class="k">response time</span><span class="v">~24-48h</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- WORK -->
+<main id="work">
+  <div class="filters">
+    <div class="filter active">all</div>
+    <div class="filter">in progress</div>
+    <div class="filter">shipped</div>
+    <div class="filter">open source</div>
+  </div>
+
+  <div class="grid g2">
+    <div>
+      <div class="panel cut proj-card">
+        <div class="panel-head">
+          <div class="lbl"><span class="dagger">†</span> <b>za0S</b></div>
+          <div class="proj-badges"><span class="badge wip">research</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="proj-desc">Custom OS architecture with a 3-layer semantic filesystem model, xattr integration, and real x86 implementation planning.</div>
+          <div class="why">
+            <div class="lbl2">// why i built it</div>
+            <div class="why-line">Every filesystem I'd used treated metadata as an afterthought — I wanted meaning to live <b>at the kernel boundary</b>, not bolted on top of it.</div>
+            <div class="why-line">Challenge: designing a semantic layer that stays independent of any specific runtime or agent.</div>
+            <div class="why-line">Learned: the hard part was never the code — it was <b>deciding what the filesystem is allowed to assume</b>.</div>
+          </div>
+          <div class="proj-stack"><div class="chip">Rust</div><div class="chip">C</div><div class="chip">systems</div></div>
+        </div>
+      </div>
+
+      <div class="panel cut proj-card">
+        <div class="panel-head">
+          <div class="lbl"><span class="dagger">†</span> <b>svg-readme-gen</b></div>
+          <div class="proj-badges"><span class="badge shipped">shipped</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="proj-desc">Animated SVG GitHub profile that mimics fastfetch/neofetch layout with live GraphQL stats injection and GitHub Actions automation.</div>
+          <div class="why">
+            <div class="lbl2">// why i built it</div>
+            <div class="why-line">Wanted a GitHub profile that felt like <b>my actual terminal</b>, not a template with my name swapped in.</div>
+            <div class="why-line">Learned: good API design is 90% of the work — wiring GraphQL stats into a live-updating SVG took 3 rewrites to get right.</div>
+          </div>
+          <div class="proj-stack"><div class="chip">Python</div><div class="chip">SVG</div><div class="chip">tooling</div></div>
+        </div>
+      </div>
+
+      <div class="panel cut proj-card">
+        <div class="panel-head">
+          <div class="lbl"><span class="dagger">†</span> <b>terminal-portfolio</b></div>
+          <div class="proj-badges"><span class="badge shipped">shipped</span><span class="badge wip">oss</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="proj-desc">Self-contained terminal portfolio page. Unified filesystem panel, vim-style file viewer tabs, live keyboard panel, floating syslog.</div>
+          <div class="why">
+            <div class="lbl2">// why i built it</div>
+            <div class="why-line">A terminal that looks right is easier to work in — taste is a forcing function, it makes you care about the detail.</div>
+          </div>
+          <div class="proj-stack"><div class="chip">TypeScript</div><div class="chip">Tauri</div><div class="chip">web</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel cut" style="margin-bottom:14px;">
+        <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>GH</b> github_heatmap.svg</div></div>
+        <div class="panel-body">
+          <div class="stat-row" style="border:none; padding-top:0;">
+            <span class="v" style="font-size:20px; color:var(--bone);">347</span>
+            <span class="v" style="font-size:20px; color:var(--bone);">5</span>
+            <span class="v" style="font-size:20px; color:var(--bone);">12d</span>
+          </div>
+          <div class="heatgrid" id="heatgrid"></div>
+        </div>
+      </div>
+
+      <div class="panel cut">
+        <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>WAKA</b> wakatime.log</div><div class="meta">142h 18m / 30d</div></div>
+        <div class="panel-body">
+          <div class="wakabar"><div class="row"><span class="lang">Rust</span><span class="pct">34.1%</span></div><div class="wtrack"><div class="wfill" style="width:34%;"></div></div></div>
+          <div class="wakabar"><div class="row"><span class="lang">Python</span><span class="pct">24.5%</span></div><div class="wtrack"><div class="wfill" style="width:24%;"></div></div></div>
+          <div class="wakabar"><div class="row"><span class="lang">TypeScript</span><span class="pct">17.6%</span></div><div class="wtrack"><div class="wfill" style="width:17%;"></div></div></div>
+          <div class="wakabar"><div class="row"><span class="lang">QML</span><span class="pct">11.3%</span></div><div class="wtrack"><div class="wfill" style="width:11%;"></div></div></div>
+          <div class="wakabar" style="margin-bottom:0;"><div class="row"><span class="lang">Bash</span><span class="pct">4.7%</span></div><div class="wtrack"><div class="wfill" style="width:5%;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- JOURNAL -->
+<main id="journal">
+  <div class="jgrid">
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>JOURNAL_ENTRIES</b></div></div>
+      <div class="jentry active">
+        <div class="jnum">01</div>
+        <div class="jtitle">Designing a Semantic Filesystem Without an Agent</div>
+        <div class="jtags"><span>systems</span><span>filesystems</span></div>
+      </div>
+      <div class="jentry">
+        <div class="jnum">02</div>
+        <div class="jtitle">Niri Is What I Wanted Sway to Be</div>
+        <div class="jtags"><span>wayland</span></div>
+      </div>
+      <div class="jentry">
+        <div class="jnum">03</div>
+        <div class="jtitle">Generating Animated SVGs with GitHub Actions</div>
+        <div class="jtags"><span>tooling</span></div>
+      </div>
+      <div class="jentry">
+        <div class="jnum">04</div>
+        <div class="jtitle">Why I Reach for Rust on Side Projects Now</div>
+        <div class="jtags"><span>rust</span></div>
+      </div>
+    </div>
+
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>~/CONTENTS</b></div><div class="meta">2025-11-12</div></div>
+      <div class="panel-body jbody">
+        <h1>Designing a Semantic Filesystem Without an Agent</h1>
+        <p>Why the semantic layer in zaOS lives independently of any AI runtime, and how xattr can carry meaning at the kernel boundary without special-casing anything.</p>
+        <div class="callout">Abstractions should earn their keep. Every layer costs something — latency, debuggability, mental model space. I only reach for one when the complexity it hides is genuinely worse than the complexity it introduces.</div>
+        <p>Most "smart" filesystems solve this by pushing understanding into an agent that sits above the fs layer. That felt backwards — the meaning should be recoverable even if nothing intelligent is running.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TERMINAL -->
+<main id="term">
+  <div class="grid g2">
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>ZSH</b> kitty — zaevo@OMEN-erde</div></div>
+      <div class="panel-body">
+        <div class="term-line"><span class="term-prompt">zaevo</span><span class="term-path">@OMEN-erde ~ $</span> fastfetch</div>
+        <div class="term-out">
+          <div><span class="k">OS</span>Arch Linux x86_64</div>
+          <div><span class="k">Kernel</span>6.12.8-zen1-1-zen</div>
+          <div><span class="k">WM</span>niri (Wayland)</div>
+          <div><span class="k">Shell</span>zsh 5.9</div>
+          <div><span class="k">Uptime</span>47d 12h 09m</div>
+        </div>
+        <div class="term-line"><span class="term-prompt">zaevo</span><span class="term-path">@OMEN-erde ~ $</span> git log --oneline -3</div>
+        <div class="term-out">
+          <div style="color:#7a9;">a3f9c12</div><div>feat: cut-panel UI pass</div>
+          <div style="color:#7a9;">9b2e041</div><div>fix: niri keybind IPC edge case</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>SYS</b> sysinfo.live</div></div>
+      <div class="panel-body">
+        <div class="sysmeter"><span class="k">cpu</span><div class="track"><div class="fill" style="width:23%;"></div></div><span class="v">23%</span></div>
+        <div class="sysmeter"><span class="k">mem</span><div class="track"><div class="fill" style="width:46%;"></div></div><span class="v">46%</span></div>
+        <div class="sysmeter"><span class="k">gpu</span><div class="track"><div class="fill" style="width:8%;"></div></div><span class="v">8%</span></div>
+        <div class="sysmeter"><span class="k">disk</span><div class="track"><div class="fill" style="width:30%;"></div></div><span class="v">30%</span></div>
+        <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:12px;">
+          <div class="log-line">13:04:56 <span class="tag">OK</span> NetworkManager: connection eduroam active</div>
+          <div class="log-line">13:04:59 <span class="tag">INFO</span> github-actions: workflow update-readme dispatched</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- CONTACT -->
+<main id="contact">
+  <div class="cgrid">
+    <div class="panel cut">
+      <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>~/SEND_MESSAGE</b></div></div>
+      <div class="panel-body">
+        <div class="field"><label>enter --name</label><input placeholder="your name"></div>
+        <div class="field"><label>enter --email</label><input placeholder="your@email.com"></div>
+        <div class="field"><label>nano --message</label><textarea placeholder="write your message here..."></textarea></div>
+        <div class="btn primary">⚡ transmit message</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel cut" style="margin-bottom:14px;">
+        <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>STATUS</b></div></div>
+        <div class="panel-body">
+          <div class="avail-bar"><span class="dot on"></span><span>open to opportunities</span></div>
+          <div style="font-size:11.5px; color:var(--muted); line-height:1.8;">Based in India · Remote-first · IST (UTC+5:30)<br>Usually responds within a day.</div>
+        </div>
+      </div>
+      <div class="panel cut">
+        <div class="panel-head"><div class="lbl"><span class="dagger">†</span> <b>CHANNELS</b></div></div>
+        <div class="channel"><div class="icon">⌥</div><div><div class="name">GitHub</div><div class="handle">github.com/serpmillers</div></div></div>
+        <div class="channel"><div class="icon">in</div><div><div class="name">LinkedIn</div><div class="handle">linkedin.com/in/serpmillers</div></div></div>
+        <div class="channel"><div class="icon">@</div><div><div class="name">Email</div><div class="handle">serpmillers@proton.me</div></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="statusbar">
+  <div class="left"><span>WS <b id="wsname">1:home</b></span><span>niri</span><span id="panelcount">2 panels</span></div>
+  <div><span>zaevo@OMEN-erde</span> &nbsp;·&nbsp; Mon 13 Jul</div>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const mains = document.querySelectorAll('main');
+  const wsname = document.getElementById('wsname');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      mains.forEach(m=>m.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+      wsname.textContent = tab.querySelector('.num').textContent + ':' + tab.dataset.tab;
+    });
+  });
+
+  // filter chips (visual only)
+  document.querySelectorAll('.filter').forEach(f=>{
+    f.addEventListener('click', ()=>{
+      document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));
+      f.classList.add('active');
+    });
+  });
+
+  // journal entries (visual only)
+  document.querySelectorAll('.jentry').forEach(e=>{
+    e.addEventListener('click', ()=>{
+      document.querySelectorAll('.jentry').forEach(x=>x.classList.remove('active'));
+      e.classList.add('active');
+    });
+  });
+
+  // build heatmap
+  const grid = document.getElementById('heatgrid');
+  const levels = ['','l1','l1','l1','l2','l2','l3','l4'];
+  for(let i=0;i<156;i++){
+    const d = document.createElement('div');
+    const r = Math.random();
+    let cls = 'hcell';
+    if(r>0.55) cls += ' ' + levels[Math.floor(Math.random()*levels.length)];
+    d.className = cls;
+    grid.appendChild(d);
+  }
+</script>
+
+</body>
+</html>

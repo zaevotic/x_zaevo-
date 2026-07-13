@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Background layers ────────────────────────────── */
+  --bg:          #0a0908;   /* void — global app backdrop canvas          */
+  --bg1:         #120d0c;   /* panel — primary panel container backgrounds */
+  --bg2:         #161010;   /* panel-alt — header accents, card backdrops  */
+  --bg3:         #1e1410;   /* high-density active interactive block layers */
+
+  /* ── Borders ──────────────────────────────────────── */
+  --border:      #2b1414;   /* base layout dividing borders                */
+  --border2:     #4a1a1f;   /* high-contrast dividers & ghost buttons       */
+
+  /* ── Text ─────────────────────────────────────────── */
+  --text:        #d9d2c4;   /* bone — primary headers and fields           */
+  --text2:       #7a736a;   /* muted — body text and content summaries     */
+  --text3:       #4a453f;   /* muted-dim — faint labels, timestamps        */
+
+  /* ── Red accent ───────────────────────────────────── */
+  --red:         #b6182b;   /* primary interactive highlight accent        */
+  --red-ember:   #ff2436;   /* brightest red — hover glows, active dots    */
+  --red-dim:     #5c1018;   /* subtle indicator markers, item dot frames   */
+  --red-mute:    #3d1f18;   /* selected panel highlights, badge layers     */
+
+  /* ── Secondary accents ────────────────────────────── */
+  --amber:       #c47c2e;   /* warning tags, code variables                */
+  --amber-dim:   #8a5420;   /* darker structural code/warning annotations  */
+  --green:       #5a8a4a;   /* success text, status indicators             */
+  --green-dim:   #2e4a22;   /* background fills for notification slots     */
+
+  /* ── Font stacks ──────────────────────────────────── */
+  --mono:        var(--font-jetbrains-mono), 'Fira Code', monospace;
+  --sans:        var(--font-inter), system-ui, sans-serif;
+  --display:     var(--font-pirata-one), serif;   /* blackletter — brand wordmark, journal h1 */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-mono:        var(--mono);
+  --font-sans:        var(--sans);
+  --font-display:     var(--display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base ─────────────────────────────────────────────────── */
+html, body {
+  height:       100%;
+  overflow:     hidden;
+  background:   var(--bg);
+  color:        var(--text);
+  font-family:  var(--mono);
+  font-size:    13px;
 }
 
+::selection {
+  background: var(--red);
+  color:      var(--bg);
+}
+
+a { color: inherit; }
+
+/* ── Custom Cursor ────────────────────────────────────────────────────────── */
+* {
+  /* Force a transparent 1x1 pixel image as cursor, falling back to none */
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=') 0 0, none !important;
+}
+
+/* ── Panel Base ─────────────────────────────────────────────────── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* ── Cut-corner clip-path (signature panel shape) ────────── */
+.cut {
+  clip-path: polygon(0 16px, 16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+.cut-sm {
+  clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+/* ── Ambient radial gradients on body ────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(182,24,43,0.10), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(182,24,43,0.06), transparent 60%);
 }
+
+/* ── Brand wordmark flicker ───────────────────────────────── */
+@keyframes flicker {
+  0%, 92%, 100% { opacity: 1; text-shadow: 0 0 14px rgba(255,36,54,0.35); }
+  93%            { opacity: 0.85; text-shadow: none; }
+  94%            { opacity: 1; text-shadow: 0 0 20px rgba(255,36,54,0.55); }
+  95%            { opacity: 0.9; }
+}
+
+/* ── Shell cursor blink (term workspace) ─────────────────── */
+@keyframes cur-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+

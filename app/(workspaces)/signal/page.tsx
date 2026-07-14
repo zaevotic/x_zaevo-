@@ -1,29 +1,17 @@
 import Panel, { PanelHead, PanelBody } from '@/components/ui/Panel';
 import SpotifyPanel from '@/components/sys/signal/spotify';
-import KeyboardPanel from '@/components/sys/signal/keyboard';
 
 export default function SignalPage() {
   return (
     <div className="grid grid-cols-2 grid-rows-2 gap-[14px] h-full">
       {/* SPOTIFY PANEL */}
-      <Panel>
+      <Panel className="col-span-2">
         <PanelHead>
           <span className="text-[10px] uppercase tracking-[.12em]" style={{ color: 'var(--red)' }}>♪</span>
           <span>spotify.live</span>
         </PanelHead>
         <PanelBody>
           <SpotifyPanel />
-        </PanelBody>
-      </Panel>
-
-      {/* KEYBOARD PANEL */}
-      <Panel>
-        <PanelHead>
-          <span className="text-[10px] uppercase tracking-[.12em]" style={{ color: 'var(--red)' }}>kbd</span>
-          <span>niri_keybinds.conf</span>
-        </PanelHead>
-        <PanelBody>
-          <KeyboardPanel />
         </PanelBody>
       </Panel>
 

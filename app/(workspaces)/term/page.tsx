@@ -4,6 +4,17 @@ import { useEffect, useRef, useState } from 'react';
 import Panel, { PanelHead, PanelBody, Dagger } from '@/components/ui/Panel';
 import { SiArchlinux } from 'react-icons/si';
 import { MdHome } from 'react-icons/md';
+import { 
+  VscFolder, 
+  VscFileCode, 
+  VscMarkdown, 
+  VscLock, 
+  VscJson, 
+  VscSettingsGear,
+  VscFile
+} from 'react-icons/vsc';
+import KeyboardPanel from '@/components/sys/signal/keyboard';
+import KeybindsPanel from '@/components/sys/signal/keybinds';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,6 +60,108 @@ const JOURNAL_LOGS: LogEntry[] = [
   { level: 'inf', msg: <>github-actions: workflow <span style={{ color: 'var(--text)' }}>update-readme</span> dispatched</> },
 ];
 
+const LL_FILES = [
+  { prefix: 'drwxr-xr-x      - zaevo 14 Jul 01:32   -I  ', color: 'var(--amber)', Icon: VscFolder, name: '.git' },
+  { prefix: '.rw-r--r--    561 zaevo 14 Jul 01:10   --  ', color: 'var(--amber)', Icon: VscSettingsGear, name: '.gitignore' },
+  { prefix: 'drwxr-xr-x      - zaevo 13 Jul 17:50   -I  ', color: 'var(--text2)', Icon: VscFolder, name: '.next' },
+  { prefix: '.rw-r--r--  2.4Ki zaevo 13 Jul 13:27   --  ', color: 'var(--amber)', Icon: VscMarkdown, name: 'AGENTS.md' },
+  { prefix: 'drwxr-xr-x      - zaevo 14 Jul 01:32   -M  ', color: 'var(--amber)', Icon: VscFolder, name: 'app' },
+  { prefix: '.rw-r--r--  109Ki zaevo 13 Jul 23:05   --  ', color: 'var(--text2)', Icon: VscLock, name: 'bun.lock' },
+  { prefix: '.rw-r--r--  4.0Ki zaevo 13 Jul 13:27   --  ', color: 'var(--text2)', Icon: VscMarkdown, name: 'CLAUDE.md' },
+  { prefix: 'drwxr-xr-x      - zaevo 27 Jun 10:29   -N  ', color: 'var(--text2)', Icon: VscFolder, name: 'components' },
+  { prefix: 'drwxr-xr-x      - zaevo 27 Jun 10:30   --  ', color: 'var(--text2)', Icon: VscFolder, name: 'config' },
+  { prefix: '.rw-r--r--    465 zaevo 27 Jun 02:13   --  ', color: 'var(--red)',   Icon: VscSettingsGear, name: 'eslint.config.mjs' },
+  { prefix: '.rw-r--r--  1.0Ki zaevo 26 Jun 22:18   --  ', color: 'var(--text2)', Icon: VscFile, name: 'LICENSE' },
+  { prefix: '.rw-r--r--    251 zaevo 14 Jul 01:03   -I  ', color: 'var(--text2)', Icon: VscFileCode, name: 'next-env.d.ts' },
+  { prefix: '.rw-r--r--    133 zaevo 27 Jun 02:13   --  ', color: 'var(--text2)', Icon: VscSettingsGear, name: 'next.config.ts' },
+  { prefix: 'drwxr-xr-x      - zaevo 13 Jul 23:05   -I  ', color: 'var(--text2)', Icon: VscFolder, name: 'node_modules' },
+  { prefix: '.rw-r--r--    739 zaevo 13 Jul 23:05   --  ', color: 'var(--amber)', Icon: VscJson, name: 'package.json' },
+  { prefix: '.rw-r--r--   16Ki zaevo 13 Jul 12:50   -I  ', color: 'var(--amber)', Icon: VscMarkdown, name: 'PORTFOLIO_UPGRADE_GUIDE.md' },
+  { prefix: '.rw-r--r--     94 zaevo 27 Jun 02:13   --  ', color: 'var(--red)',   Icon: VscSettingsGear, name: 'postcss.config.mjs' },
+  { prefix: 'drwxr-xr-x      - zaevo 27 Jun 10:33   --  ', color: 'var(--text2)', Icon: VscFolder, name: 'public' },
+  { prefix: 'drwxr-xr-x      - zaevo 13 Jul 17:46   -I  ', color: 'var(--text2)', Icon: VscFolder, name: 'react_bits_refs' },
+  { prefix: '.rw-r--r--  1.4Ki zaevo 27 Jun 02:13   --  ', color: 'var(--text2)', Icon: VscMarkdown, name: 'README-next.md' },
+  { prefix: '.rw-r--r--     43 zaevo 26 Jun 22:19   --  ', color: 'var(--amber)', Icon: VscMarkdown, name: 'README.md' },
+  { prefix: 'drwxr-xr-x      - zaevo 13 Jul 13:16   --  ', color: 'var(--text2)', Icon: VscFolder, name: 'ref_htmls' },
+  { prefix: '.rw-r--r--    666 zaevo 27 Jun 02:13   --  ', color: 'var(--amber)', Icon: VscJson, name: 'tsconfig.json' },
+];
+
+const TREE_DATA = [
+  { p: '├──  ', n: 'AGENTS.md' },
+  { p: '├──  ', n: 'app', isDir: true },
+  { p: '│   ├──  ', n: '(workspaces)', isDir: true },
+  { p: '│   │   ├──  ', n: 'contact', isDir: true },
+  { p: '│   │   │   └──  ', n: 'page.tsx' },
+  { p: '│   │   ├──  ', n: 'home', isDir: true },
+  { p: '│   │   │   └──  ', n: 'page.tsx' },
+  { p: '│   │   ├──  ', n: 'journal', isDir: true },
+  { p: '│   │   │   └──  ', n: 'page.tsx' },
+  { p: '│   │   ├──  ', n: 'layout.tsx' },
+  { p: '│   │   ├──  ', n: 'signal', isDir: true },
+  { p: '│   │   │   └──  ', n: 'page.tsx' },
+  { p: '│   │   ├──  ', n: 'template.tsx' },
+  { p: '│   │   ├──  ', n: 'term', isDir: true },
+  { p: '│   │   │   └──  ', n: 'page.tsx' },
+  { p: '│   │   └──  ', n: 'work', isDir: true },
+  { p: '│   │       └──  ', n: 'page.tsx' },
+  { p: '│   ├──  ', n: 'favicon.ico' },
+  { p: '│   ├──  ', n: 'globals.css' },
+  { p: '│   ├──  ', n: 'layout.tsx' },
+  { p: '│   └──  ', n: 'page.tsx' },
+  { p: '├──  ', n: 'bun.lock' },
+  { p: '├──  ', n: 'CLAUDE.md' },
+  { p: '├──  ', n: 'components', isDir: true },
+  { p: '│   ├──  ', n: 'sys', isDir: true },
+  { p: '│   │   ├──  ', n: 'dev', isDir: true },
+  { p: '│   │   │   ├──  ', n: 'dsp.tsx' },
+  { p: '│   │   │   ├──  ', n: 'kbd.tsx' },
+  { p: '│   │   │   └──  ', n: 'tty.tsx' },
+  { p: '│   │   ├──  ', n: 'log', isDir: true },
+  { p: '│   │   │   ├──  ', n: 'github.tsx' },
+  { p: '│   │   │   ├──  ', n: 'sysinfo.tsx' },
+  { p: '│   │   │   └──  ', n: 'wakatime.tsx' },
+  { p: '│   │   └──  ', n: 'signal', isDir: true },
+  { p: '│   │       ├──  ', n: 'keybinds.tsx' },
+  { p: '│   │       ├──  ', n: 'keyboard.tsx' },
+  { p: '│   │       └──  ', n: 'spotify.tsx' },
+  { p: '│   └──  ', n: 'ui', isDir: true },
+  { p: '│       ├──  ', n: 'CustomCursor.tsx' },
+  { p: '│       ├──  ', n: 'LetterGlitch.tsx' },
+  { p: '│       ├──  ', n: 'MonitorBar.tsx' },
+  { p: '│       ├──  ', n: 'Panel.tsx' },
+  { p: '│       └──  ', n: 'StatusBar.tsx' },
+  { p: '├──  ', n: 'config', isDir: true },
+  { p: '├──  ', n: 'eslint.config.mjs' },
+  { p: '├──  ', n: 'LICENSE' },
+  { p: '├──  ', n: 'next-env.d.ts' },
+  { p: '├──  ', n: 'next.config.ts' },
+  { p: '├──  ', n: 'package.json' },
+  { p: '├──  ', n: 'PORTFOLIO_UPGRADE_GUIDE.md' },
+  { p: '├──  ', n: 'postcss.config.mjs' },
+  { p: '├──  ', n: 'public', isDir: true },
+  { p: '│   ├──  ', n: 'file.svg' },
+  { p: '│   ├──  ', n: 'globe.svg' },
+  { p: '│   ├──  ', n: 'journals', isDir: true },
+  { p: '│   ├──  ', n: 'next.svg' },
+  { p: '│   ├──  ', n: 'relics', isDir: true },
+  { p: '│   ├──  ', n: 'vercel.svg' },
+  { p: '│   └──  ', n: 'window.svg' },
+  { p: '├──  ', n: 'react_bits_refs', isDir: true },
+  { p: '│   ├──  ', n: 'border_glow.md' },
+  { p: '│   ├──  ', n: 'letter_glitch.md' },
+  { p: '│   └──  ', n: 'magic_bento.md' },
+  { p: '├──  ', n: 'README-next.md' },
+  { p: '├──  ', n: 'README.md' },
+  { p: '├──  ', n: 'ref_htmls', isDir: true },
+  { p: '│   ├──  ', n: 'MAIN.html' },
+  { p: '│   ├──  ', n: 'ws1.html' },
+  { p: '│   ├──  ', n: 'ws2.html' },
+  { p: '│   ├──  ', n: 'ws3.html' },
+  { p: '│   ├──  ', n: 'ws4.html' },
+  { p: '│   └──  ', n: 'ws5.html' },
+  { p: '└──  ', n: 'tsconfig.json' },
+];
+
 const LEVEL_COLOR: Record<LogLevel, string> = {
   ok:  'var(--green)',
   inf: 'var(--amber)',
@@ -56,6 +169,17 @@ const LEVEL_COLOR: Record<LogLevel, string> = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getTreeIcon(name: string, isDir?: boolean) {
+  if (isDir) return { Icon: VscFolder, color: 'var(--amber)' };
+  if (name.endsWith('.md')) return { Icon: VscMarkdown, color: 'var(--amber)' };
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return { Icon: VscFileCode, color: 'var(--text2)' };
+  if (name.endsWith('.json')) return { Icon: VscJson, color: 'var(--amber)' };
+  if (name.includes('config') || name.startsWith('.git')) return { Icon: VscSettingsGear, color: 'var(--red)' };
+  if (name.endsWith('.lock')) return { Icon: VscLock, color: 'var(--text2)' };
+  if (name.endsWith('.css')) return { Icon: VscFileCode, color: 'var(--text2)' };
+  return { Icon: VscFile, color: 'var(--text2)' };
+}
 
 function bar(pct: number, len = 20) {
   const filled = Math.round((pct / 100) * len);
@@ -232,18 +356,26 @@ function SysInfoPanel() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TermPage() {
+  const shellBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (shellBottomRef.current) {
+      shellBottomRef.current.scrollIntoView({ behavior: 'instant' });
+    }
+  }, []);
+
   return (
     <div
       className="grid gap-[14px]"
       style={{
         height: '100%',
-        gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: '3fr 1fr',
+        gridTemplateColumns: 'repeat(10, 1fr)',
+        gridTemplateRows: 'repeat(10, 1fr)',
       }}
     >
 
       {/* ── SHELL PANEL (top-left) ──────────────────────────── */}
-      <Panel style={{ gridColumn: 1, gridRow: 1, position: 'relative' }} delay={0.1}>
+      <Panel style={{ gridColumn: '1 / 5', gridRow: '1 / 9', position: 'relative' }} delay={0.1}>
         <MatrixCanvas />
         <PanelHead>
           <Dagger />{' '}
@@ -270,51 +402,20 @@ export default function TermPage() {
 
             {/* ll -a */}
             <div className="h-[6px]" />
-            <ShellLine cmd="ll" flag=" -a" arg=" ~/repos/zaevotic" time="15:35:12" />
+            <ShellLine cmd="ll" flag=" -a" arg=" ~/repos/x_zaevo-" time="15:35:12" />
             <div className="mt-[4px]" style={{ color: 'var(--text2)', whiteSpace: 'pre', overflowX: 'hidden' }}>
               <div style={{ color: 'var(--text3)' }}>
                 {`Permissions  Size User  Date Modified Git  Name`}
               </div>
-              <div>
-                {`drwxr-xr-x      - zaevo 29 Jun 17:11   --   `}
-                <span style={{ color: 'var(--amber)' }}>.git</span>
-              </div>
-              <div>
-                {`drwxr-xr-x      - zaevo 23 Jun 20:04   --   `}
-                <span style={{ color: 'var(--amber)' }}>.github</span>
-              </div>
-              <div>
-                {`.rw-r--r--      6 zaevo 23 Jun 20:04   --   `}
-                <span style={{ color: 'var(--text2)' }}>.gitignore</span>
-              </div>
-              <div>
-                {`drwxr-xr-x      - zaevo 13 Jul 14:25   --   `}
-                <span style={{ color: 'var(--amber)' }}>.venv</span>
-              </div>
-              <div>
-                {`drwxr-xr-x      - zaevo 23 Jun 19:49   --   `}
-                <span style={{ color: 'var(--amber)' }}>cache</span>
-              </div>
-              <div>
-                {`.rw-r--r--  5.3Ki zaevo 23 Jun 20:46   --   `}
-                <span style={{ color: 'var(--text2)' }}>dark.svg</span>
-              </div>
-              <div>
-                {`.rwxr-xr-x  1.9Mi zaevo  6 May 17:53   --   `}
-                <span style={{ color: 'var(--text2)' }}>header.gif</span>
-              </div>
-              <div>
-                {`.rw-r--r--  5.3Ki zaevo 23 Jun 20:44   --   `}
-                <span style={{ color: 'var(--text2)' }}>light.svg</span>
-              </div>
-              <div>
-                {`.rw-r--r--    170 zaevo 23 Jun 23:26   --   `}
-                <span style={{ color: 'var(--text2)' }}>README.md</span>
-              </div>
-              <div>
-                {`.rw-r--r--   15Ki zaevo 23 Jun 19:55   --   `}
-                <span style={{ color: 'var(--red)' }}>update.py</span>
-              </div>
+              {LL_FILES.map((f) => (
+                <div key={f.name}>
+                  <span className="whitespace-pre">{f.prefix}</span>
+                  <span style={{ color: f.color }}>
+                    <f.Icon size={12} className="inline mb-[2px] mr-[6px]" />
+                    {f.name}
+                  </span>
+                </div>
+              ))}
             </div>
 
             {/* git log */}
@@ -376,49 +477,66 @@ export default function TermPage() {
               />
             </div>
           </div>
+          <div ref={shellBottomRef} />
         </PanelBody>
       </Panel>
 
-      {/* ── FILESYSTEM PANEL (top-right) ───────────────────────── */}
-      <Panel style={{ gridColumn: 2, gridRow: 1 }} delay={0.2}>
+      {/* ── FILESYSTEM PANEL (bottom-right) ───────────────────────── */}
+      <Panel style={{ gridColumn: '5 / 11', gridRow: '4 / 11' }} delay={0.4}>
         <PanelHead>
           <Dagger />{' '}
           <b style={{ color: 'var(--red)', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>fs</b>
           <span className="text-[11px] normal-case tracking-normal" style={{ color: 'var(--text3)' }}>
-            ~/repos/zaevotic — tree
+            ~/repos/x_zaevo- — tree
           </span>
         </PanelHead>
         <PanelBody>
-          {/* cwd badge */}
-          <div
-            className="text-[10px] px-[8px] py-[4px] mb-[10px] border"
-            style={{ color: 'var(--text3)', background: 'var(--bg2)', borderColor: 'var(--border)' }}
-          >
-            cwd:{' '}
-            <span style={{ color: 'var(--amber)' }}>~/repos/zaevotic</span>
-          </div>
-
           {/* Tree */}
-          <div className="text-[11px] leading-[1.8]" style={{ fontFamily: 'var(--mono)' }}>
-            {/* zaevotic */}
-            <FsRow gutter="▾" name=".github/" type="dir" />
-            <FsRow gutter="▾" name="workflows/" type="dir" indent={1} />
-            <FsRow gutter="  " name="update.yml" type="file" indent={2} />
-            <FsRow gutter="  " name=".gitignore" type="file" />
-            <FsRow gutter="▾" name="cache/" type="dir" />
-            <FsRow gutter="  " name="9e53f07edb42268fea5cb2798516a5fc9a98bc930f0d845b62d60f2f7bb31820.txt" type="file" indent={1} />
-            <FsRow gutter="  " name="requirements.txt" type="file" indent={1} />
-            <FsRow gutter="  " name="dark.svg" type="file" />
-            <FsRow gutter="  " name="header.gif" type="file" />
-            <FsRow gutter="  " name="light.svg" type="file" />
-            <FsRow gutter="  " name="README.md" type="file" />
-            <FsRow gutter="  " name="update.py" type="exec" />
+          <div className="text-[11px] leading-[1.8] flex flex-col" style={{ fontFamily: 'var(--mono)' }}>
+            <div>
+              <span style={{ color: 'var(--red)' }}>┌──────&gt;</span>
+            </div>
+            <div className="flex justify-between w-full pr-[12px]">
+              <div>
+                <span style={{ color: 'var(--red)' }}>│ </span>
+                <span style={{ color: 'var(--text)' }}>zaevo</span>
+                <span style={{ color: 'var(--text2)' }}> on </span>
+                <span style={{ color: 'var(--text)' }}>OMEN-erde</span>
+                <span style={{ color: 'var(--text2)' }}> at </span>
+                <span style={{ color: 'var(--amber)' }}>…/x_zaevo-</span>
+                <span style={{ color: 'var(--text2)' }}> via </span>
+                <span style={{ color: 'var(--green)' }}>main</span>
+              </div>
+              <div style={{ color: 'var(--text2)' }}>09:52:42</div>
+            </div>
+            <div>
+              <span style={{ color: 'var(--red)' }}>└─&gt; </span>
+              <span style={{ color: 'var(--text)' }}>tree</span>
+            </div>
+            <div>
+              <span style={{ color: 'var(--amber)' }}> .</span>
+            </div>
+            
+            {TREE_DATA.map((row, idx) => {
+              const { Icon, color } = getTreeIcon(row.n, row.isDir);
+              return (
+                <div key={idx}>
+                  <span style={{ color: 'var(--border2)' }} className="whitespace-pre">
+                    {row.p}
+                  </span>
+                  <span style={{ color }}>
+                    <Icon size={12} className="inline mb-[2px] mr-[6px]" />
+                    {row.n}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </PanelBody>
       </Panel>
 
       {/* ── JOURNAL LOG PANEL (bottom-left) ──────────────────────── */}
-      <Panel style={{ gridColumn: 1, gridRow: 2 }} delay={0.3}>
+      <Panel style={{ gridColumn: '1 / 5', gridRow: '9 / 11', alignSelf: 'end' }} delay={0.3}>
         <PanelHead>
           <Dagger />{' '}
           <b style={{ color: 'var(--red)', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>log</b>
@@ -431,17 +549,31 @@ export default function TermPage() {
         </PanelBody>
       </Panel>
 
-      {/* ── SYSINFO PANEL (bottom-right) ─────────────────────────── */}
-      <Panel style={{ gridColumn: 2, gridRow: 2 }} delay={0.4}>
+      {/* ── KEYBOARD PANEL (top-right) ─────────────────────────── */}
+      <Panel style={{ gridColumn: '5 / 8', gridRow: '1 / 4' }} delay={0.2}>
         <PanelHead>
           <Dagger />{' '}
-          <b style={{ color: 'var(--red)', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>sys</b>
+          <b style={{ color: 'var(--red)', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>kbd</b>
           <span className="text-[11px] normal-case tracking-normal" style={{ color: 'var(--text3)' }}>
-            sysinfo.live
+            keyboard.live
           </span>
         </PanelHead>
         <PanelBody style={{ padding: '10px 12px' }}>
-          <SysInfoPanel />
+          <KeyboardPanel />
+        </PanelBody>
+      </Panel>
+
+      {/* ── KEYBINDS PANEL (top-right 2) ─────────────────────────── */}
+      <Panel style={{ gridColumn: '8 / 11', gridRow: '1 / 4' }} delay={0.3}>
+        <PanelHead>
+          <Dagger />{' '}
+          <b style={{ color: 'var(--red)', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>kbd</b>
+          <span className="text-[11px] normal-case tracking-normal" style={{ color: 'var(--text3)' }}>
+            niri_keybinds.conf
+          </span>
+        </PanelHead>
+        <PanelBody style={{ padding: '10px 12px' }}>
+          <KeybindsPanel />
         </PanelBody>
       </Panel>
 

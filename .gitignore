@@ -42,6 +42,9 @@ temp
 next-env.d.ts
 
 # instruction set
+PORTFOLIO_UPGRADE_GUIDE.md
+react_bits_refs
+current_context.md
 AGENTS.md
 CLAUDE.md
 PORTFOLIO_UPGRADE_GUIDE.md

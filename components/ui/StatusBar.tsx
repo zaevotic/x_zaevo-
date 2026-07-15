@@ -19,6 +19,18 @@ function getDate() {
 }
 
 export default function StatusBar() {
+  const [visitCount, setVisitCount] = useState<number>(0);
+
+  useEffect(() => {
+    // Trigger a request to the proxy which increments the counter and returns the count in a header
+    fetch('/api/sys/proxy')
+      .then((res) => {
+        const countHeader = res.headers.get('x-visit-count');
+        if (countHeader) setVisitCount(parseInt(countHeader, 10));
+      })
+      .catch(() => setVisitCount(null));
+  }, []);
+
   const pathname = usePathname();
   const [isJournalOpen, setIsJournalOpen] = useState(false);
 
@@ -45,11 +57,13 @@ export default function StatusBar() {
         </span>
         <span className="hidden sm:inline">niri</span>
       </div>
-      <div>
+      <div className="flex items-center gap-[8px]">
+        <span className="ml-4">Visits: {visitCount}</span>
+        <span className="hidden sm:inline">&nbsp;&middot;&nbsp;</span>
         <span className="hidden sm:inline">zaevo@OMEN-erde</span>
         <span className="hidden sm:inline">&nbsp;&middot;&nbsp;</span>
         <span>{getDate()}</span>
       </div>
-    </footer>
+            </footer>
   );
 }

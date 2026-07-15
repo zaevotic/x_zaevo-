@@ -65,3 +65,19 @@ Map these exact hex values inside your CSS variables file[cite: 1]:
 - **Font Stack Harmony:** Always assign mono components to `--mono` (`JetBrains Mono`, `Fira Code` targets)[cite: 1]. Use `--sans` (`Inter` configurations) strictly for dense project description summaries. Use `--display` (`Pirata One`) exclusively for the brand wordmark and journal/blog `<h1>` headings — never for body text or UI labels.
 - **Interactive States:** Active elements must use `var(--red)` text combined with `var(--red-mute)` bounding layers[cite: 1]. Ghost secondary inputs should use `var(--border2)` framing[cite: 1].
 - **Visual Dividers:** Use standard thin lines styled via `var(--border)` or explicit micro-dot spacing flags to divide panel subsections[cite: 1].
+
+## Unix-Inspired Directory Architecture (FHS)
+This codebase strictly mirrors the POSIX / Unix Filesystem Hierarchy Standard. Do not create generic directories like `utils/`, `helpers/`, or flat `components/` folders. Every new component or API route must be categorized into its correct Unix equivalent based on its role.
+
+### Backend / API (`app/api/`)
+Acts as the OS kernel and system layer:
+- **`bin/`** — Executable endpoints and standalone core scripts (e.g., mail dispatchers).
+- **`sys/`** — System-level hardware/daemon integrations and external 3rd-party APIs (e.g., GitHub, Spotify, WakaTime).
+- **`usr/`** — User-land data, content APIs, and user-facing application logic (e.g., journal posts, projects).
+
+### Frontend Components (`components/`)
+React components are strictly separated into low-level "hardware/OS" handlers and high-level UI/window primitives:
+- **`sys/dev/`** — Device handlers for low-level I/O (e.g., `kbd.tsx` for keyboard, `tty.tsx` for terminal teletype, `dsp.tsx` for audio).
+- **`sys/log/`** — Visual telemetry, history, and system logs (e.g., system info screens, heatmaps, wakatime stats).
+- **`sys/signal/`** — Process control, interrupts, and global event handlers (e.g., keybind watchers, terminal process states).
+- **`ui/`** — The display server / window manager layer. This holds actual visual window primitives, structural shells, and generic stylistic elements (e.g., `Panel.tsx`, `CustomCursor.tsx`, `MonitorBar.tsx`).

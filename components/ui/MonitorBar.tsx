@@ -130,6 +130,7 @@ export default function MonitorBar() {
         >
           OMEN-erde
         </span>
+        <span className="hidden md:inline text-[12px]" style={{ color: "var(--text3)" }}>&nbsp;&middot;&nbsp;</span>
         <Clock />
       </div>
     </header>

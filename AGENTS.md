@@ -12,6 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Read `CLAUDE.md` to synchronize with the design system, spacing tokens, and explicit constraints before proposing an execution plan.
 
 ## Before writing any code
+- Respect the Unix-like filesystem architecture (FHS). Read CLAUDE.md before creating new files to ensure they are placed in the correct `sys`, `dev`, `bin`, or `usr` equivalent directory.
 - Check the target component you're editing before modifying — don't assume class names.
 - Prefer editing existing files over creating new ones.
 

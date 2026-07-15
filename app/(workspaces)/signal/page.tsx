@@ -207,7 +207,7 @@ export default function TemporaryPage() {
                 <Wrapper
                   key={c.name}
                   {...(c.href ? { href: c.href, target: c.href.startsWith("mailto:") ? "_self" : "_blank", rel: "noopener noreferrer" } : {})}
-                  className="flex items-center gap-[12px] px-[14px] py-[12px] no-underline group transition-colors hover:bg-[rgba(182,24,43,0.03)]"
+                  className="flex items-center gap-[12px] px-[14px] py-[12px] no-underline group transition-colors hover:bg-[var(--red-hover-tint)]"
                   style={{
                     borderBottom:
                       i < CHANNELS.length - 1

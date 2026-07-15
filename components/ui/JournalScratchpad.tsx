@@ -119,7 +119,7 @@ export default function JournalScratchpad() {
         <div
           className="fixed top-[36px] bottom-[27px] left-0 right-0 z-[40] flex items-center justify-center p-[10px] sm:p-[24px]"
           style={{
-            background: "rgba(5, 5, 5, 0.85)",
+            background: "rgba(10, 9, 8, 0.85)", // matches --bg (#0a0908) with opacity,
             backdropFilter: "blur(2px)",
           }}
           onClick={() => setIsOpen(false)}
@@ -136,7 +136,7 @@ export default function JournalScratchpad() {
               {/* Mobile overlay */}
               {isMobileMenuOpen && (
                 <div 
-                  className="absolute inset-0 z-40 bg-black/60 md:hidden backdrop-blur-sm"
+                  className="absolute inset-0 z-40 bg-[var(--bg)]/60 md:hidden backdrop-blur-sm"
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
               )}

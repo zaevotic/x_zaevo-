@@ -57,9 +57,9 @@ export default function ResumeScratchpad() {
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed top-[36px] bottom-[27px] left-0 right-0 z-[40] flex items-center justify-center p-[10px] sm:p-[24px]"
+          className="fixed top-[36px] bottom-[27px] left-0 right-0 z-[40] flex items-center justify-center p-[10px] sm:p-[24px] bg-[var(--bg1)]"
           style={{
-            background: "rgba(5, 5, 5, 0.85)",
+            background: "rgba(10, 9, 8, 0.85)", // mimic journal overlay
             backdropFilter: "blur(2px)",
           }}
           onClick={() => setIsOpen(false)}
@@ -116,13 +116,12 @@ export default function ResumeScratchpad() {
                 <style>{`.overflow-auto::-webkit-scrollbar { display: none; }`}</style>
                 <div className="w-full min-h-full flex items-start justify-center">
                   <div 
-                    className="transition-transform duration-200 ease-out py-[40px] px-[20px]"
-                    style={{ transform: `scale(${scale})`, transformOrigin: "top center" }}
+                    className="transition-transform duration-200 ease-out py-[40px] px-[20px]"                    style={{ transform: `scale(${scale})`, transformOrigin: "top center" }}
                   >
                     <img 
-                      src="/resume.svg" 
+                      src="/resume-2.png" 
                       alt="Snehil Gautam Resume" 
-                      className="w-[850px] max-w-none shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-white"
+                      className="w-[850px] max-w-none shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-[var(--bg)]"
                     />
                   </div>
                 </div>

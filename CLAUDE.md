@@ -22,6 +22,7 @@ Maintain high-density terminal alignment. Utilize explicit pixel constraints rat
 - Nav logo branding: `text-[16px]`
 - Call-to-Action section headers: `text-[20px] sm:text-[24px]`
 - Section Title Names (e.g., Hero header): `text-[42px]`[cite: 1]
+- Brand hero wordmark / construction emoji: `text-[48px]` / `text-[64px]` — intentional breakout from spec scale for brand emphasis
 
 ### Spacing Rhythm
 - Section external container bounds: `py-8`[cite: 1]

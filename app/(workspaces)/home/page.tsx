@@ -153,7 +153,7 @@ export default function HomePage() {
                   <div className="flex gap-[12px] mt-[24px]">
                     <button
                       onClick={() => document.dispatchEvent(new CustomEvent("open-resume"))}
-                      className="px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:bg-[rgba(182,24,43,0.03)]"
+                      className="px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:bg-[var(--red-hover-tint)]"
                       style={{
                         borderColor: "var(--border2)",
                         color: "var(--text)",
@@ -163,7 +163,7 @@ export default function HomePage() {
                     </button>
                     <Link
                       href="/work"
-                      className="px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:bg-[rgba(182,24,43,0.03)] no-underline"
+                      className="px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:bg-[var(--red-hover-tint)] no-underline"
                       style={{
                         borderColor: "var(--border2)",
                         color: "var(--text)",

@@ -125,7 +125,7 @@ export default function KeyboardPanel() {
       "flex items-center justify-center border border-b-2 rounded-[3px] text-[9px] whitespace-nowrap select-none transition-all duration-75 ";
 
     if (key.kind === "fn")
-      classes += "h-[22px] min-w-[24px] text-[8px] px-[4px] ";
+      classes += "h-[22px] min-w-[24px] text-[9px] px-[2px] ";
     else if (key.kind === "wide") classes += "h-[28px] min-w-[46px] px-[4px] ";
     else if (key.kind === "wider") classes += "h-[28px] min-w-[58px] px-[4px] ";
     else if (key.kind === "widest")

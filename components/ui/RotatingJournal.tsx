@@ -84,7 +84,7 @@ export default function RotatingJournal({ posts }: Props) {
                   );
                 }
               }}
-              className="py-[12px] border-b-[1px] flex flex-col text-left group transition-colors hover:bg-[rgba(182,24,43,0.03)] px-[8px] -mx-[8px] rounded-[4px] shrink-0"
+              className="py-[12px] border-b-[1px] flex flex-col text-left group transition-colors hover:bg-[var(--red-hover-tint)] px-[8px] -mx-[8px] rounded-[4px] shrink-0"
               style={{
                 borderColor:
                   idx < displayedItems.length - 1
@@ -100,8 +100,8 @@ export default function RotatingJournal({ posts }: Props) {
                   className="text-[9px] px-[6px] py-[1px] rounded-[2px] tracking-[.06em] border transition-colors group-hover:border-[var(--red-dim)]"
                   style={{
                     color: "var(--amber)",
-                    background: "#2a1e0e",
-                    borderColor: "#3d2e14",
+                    background: "var(--amber-warm-dim)",
+                    borderColor: "var(--amber-warm)",
                   }}
                 >
                   {post.tag}

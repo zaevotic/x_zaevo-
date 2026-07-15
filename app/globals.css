@@ -22,9 +22,15 @@
   --red-dim:     #5c1018;   /* subtle indicator markers, item dot frames   */
   --red-mute:    #3d1f18;   /* selected panel highlights, badge layers     */
 
+
+/* ── Hover states ─────────────────────────────────── */
+--red-hover-tint: rgba(182, 24, 43, 0.03); /* subtle interactive hover highlight */
+
   /* ── Secondary accents ────────────────────────────── */
   --amber:       #c47c2e;   /* warning tags, code variables                */
   --amber-dim:   #8a5420;   /* darker structural code/warning annotations  */
+--amber-warm: #3d2e14; /* warm amber — journal tags, secondary borders */
+--amber-warm-dim: #2a1e0e; /* deep warm amber — tag backgrounds */
   --green:       #5a8a4a;   /* success text, status indicators             */
   --green-dim:   #2e4a22;   /* background fills for notification slots     */
 

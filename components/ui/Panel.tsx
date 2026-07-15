@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -31,16 +31,16 @@ export function PanelHead({ children, meta }: PanelHeadProps) {
   return (
     <div
       className="flex items-center justify-between px-[14px] py-[9px] border-b shrink-0 z-10"
-      style={{ borderColor: 'var(--border)', background: 'var(--bg2)' }}
+      style={{ borderColor: "var(--border)", background: "var(--bg2)" }}
     >
       <div
         className="flex items-center gap-[8px] text-[10px] tracking-[1.5px] uppercase"
-        style={{ color: 'var(--text2)' }}
+        style={{ color: "var(--text2)" }}
       >
         {children}
       </div>
       {meta && (
-        <div className="text-[10px]" style={{ color: 'var(--text3)' }}>
+        <div className="text-[10px]" style={{ color: "var(--text3)" }}>
           {meta}
         </div>
       )}
@@ -48,7 +48,7 @@ export function PanelHead({ children, meta }: PanelHeadProps) {
   );
 }
 
-export function PanelBody({ children, className = '', style }: PanelBodyProps) {
+export function PanelBody({ children, className = "", style }: PanelBodyProps) {
   return (
     <div
       className={`flex-1 min-h-0 overflow-auto p-[16px] z-10 ${className}`}
@@ -60,22 +60,28 @@ export function PanelBody({ children, className = '', style }: PanelBodyProps) {
 }
 
 export function Dagger() {
-  return <span style={{ color: 'var(--red)', fontSize: '12px' }}>†</span>;
+  return <span style={{ color: "var(--red)", fontSize: "12px" }}>†</span>;
 }
 
 // ── Panel (default export) ──────────────────────────────────────────────────
 
-export default function Panel({ children, cut = true, className = '', style, delay = 0 }: PanelProps) {
+export default function Panel({
+  children,
+  cut = true,
+  className = "",
+  style,
+  delay = 0,
+}: PanelProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 15, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ 
-        duration: 0.6, 
+      transition={{
+        duration: 0.6,
         ease: [0.16, 1, 0.3, 1], // premium custom easeOut
-        delay: delay 
+        delay: delay,
       }}
-      className={`panel ${cut ? 'cut' : ''} ${className}`.trim()}
+      className={`panel ${cut ? "cut" : ""} ${className}`.trim()}
       style={style}
     >
       {children}

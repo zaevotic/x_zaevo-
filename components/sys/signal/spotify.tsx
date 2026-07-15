@@ -1,88 +1,163 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from "react";
+
+interface SpotifyData {
+  isPlaying: boolean;
+  title: string | null;
+  artist?: string;
+  album?: string;
+  albumArt?: string;
+  url?: string;
+  progress?: number;
+  duration?: number;
+  error?: string;
+}
 
 export default function SpotifyPanel() {
-  const [spPct, setSpPct] = useState(38);
-  
+  const [track, setTrack] = useState<SpotifyData | null>(null);
+  const [progress, setProgress] = useState(0);
+  const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSpPct((prev) => Math.min(100, prev + (100 / (4 * 60))));
-    }, 1000);
-    return () => clearInterval(interval);
+    const load = () => {
+      fetch("/api/sys/spotify")
+        .then((r) => r.json())
+        .then((data: SpotifyData) => {
+          setTrack(data);
+          setProgress(
+            data.progress && data.duration
+              ? (data.progress / data.duration) * 100
+              : 0,
+          );
+
+          // Clear any previous end-of-song timer
+          if (endTimer.current) clearTimeout(endTimer.current);
+
+          // Schedule a fresh fetch the moment this track should end
+          // +1500ms buffer gives Spotify's API time to register the new track
+          if (data.isPlaying && data.progress && data.duration) {
+            const remaining = data.duration - data.progress;
+            endTimer.current = setTimeout(load, remaining + 1500);
+          }
+        })
+        .catch(() => {});
+    };
+
+    load();
+    const id = setInterval(load, 30_000);
+    return () => {
+      clearInterval(id);
+      if (endTimer.current) clearTimeout(endTimer.current);
+    };
   }, []);
 
-  const total = 247; // 4:07
-  const elapsed = Math.round(total * spPct / 100);
-  const m = Math.floor(elapsed / 60);
-  const s = elapsed % 60;
-  const curTime = `${m}:${s < 10 ? '0' : ''}${s}`;
+  useEffect(() => {
+    if (!track?.isPlaying || !track.duration) return;
+    const tick = setInterval(() => {
+      setProgress((prev) =>
+        Math.min(100, prev + (1000 / track.duration!) * 100),
+      );
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [track]);
+
+  const title = track?.title ?? "—";
+  const artist = track?.artist ?? "—";
+  const album = track?.album ?? "—";
+
+  const totalSec = track?.duration ? Math.round(track.duration / 1000) : 0;
+  const elapsed = Math.round((progress / 100) * totalSec);
+  const fmt = (s: number) =>
+    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <div className="flex flex-col h-full">
-      <div 
-        className="w-full max-w-[200px] aspect-square rounded-[3px] mb-[14px] flex items-center justify-center relative overflow-hidden border"
-        style={{ background: 'var(--bg3)', borderColor: 'var(--border2)' }}
+      {/* Vinyl disc — album art masked behind spinning grooves */}
+      <div
+        className="w-full max-w-[200px] aspect-square rounded-[3px] mb-[14px] relative border"
+        style={{ background: "var(--bg)", borderColor: "var(--border2)" }}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className="rounded-full flex items-center justify-center animate-[spin_8s_linear_infinite]"
-            style={{ 
-              width: 110, 
-              height: 110,
-              background: `conic-gradient(
-                var(--bg) 0deg, var(--border) 20deg, var(--bg) 40deg,
-                var(--border2) 80deg, var(--bg) 120deg, var(--border) 160deg,
-                var(--bg) 200deg, var(--border2) 240deg, var(--bg) 280deg,
-                var(--border) 320deg, var(--bg) 360deg
-              )`
-            }}
-          >
-            <div 
-              className="rounded-full border-[2px]" 
-              style={{ width: 28, height: 28, background: 'var(--bg1)', borderColor: 'var(--red-dim)' }}
+        {/* Spinning disc — clips everything inside to a circle */}
+        <div
+          className="absolute rounded-full overflow-hidden animate-[spin_8s_linear_infinite]"
+          style={{ inset: 8 }}
+        >
+          {/* Album art base — slightly dimmed so grooves read on top */}
+          {track?.albumArt && (
+            <img
+              src={track.albumArt}
+              alt={album}
+              className="absolute inset-0 w-full h-full object-cover opacity-75"
             />
-          </div>
+          )}
+
+          {/* Vinyl groove conic-gradient — semi-transparent over the art */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `conic-gradient(
+                rgba(0,0,0,0.35) 0deg,   rgba(255,255,255,0.06) 18deg,
+                rgba(0,0,0,0.35) 36deg,  rgba(0,0,0,0.4)        72deg,
+                rgba(255,255,255,0.06) 108deg, rgba(0,0,0,0.35) 144deg,
+                rgba(0,0,0,0.4)  180deg, rgba(255,255,255,0.06) 216deg,
+                rgba(0,0,0,0.35) 252deg, rgba(255,255,255,0.06) 288deg,
+                rgba(0,0,0,0.35) 324deg, rgba(0,0,0,0.4)        360deg
+              )`,
+            }}
+          />
+
+          {/* Center spindle hole */}
+          <div
+            className="absolute rounded-full border-[2px]"
+            style={{
+              width: 22,
+              height: 22,
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: "var(--bg1)",
+              borderColor: "var(--red-dim)",
+              zIndex: 10,
+            }}
+          />
         </div>
-      </div>
-      
-      <p className="text-[13px] mb-[3px]" style={{ color: 'var(--text)' }}>Something About Us</p>
-      <p className="text-[11px] mb-[12px]" style={{ color: 'var(--text3)' }}>Daft Punk · Discovery</p>
-      
-      <div className="h-[3px] rounded-[2px] mb-[6px] relative" style={{ background: 'var(--border)' }}>
-        <div 
-          className="h-full rounded-[2px] transition-all duration-1000 ease-linear" 
-          style={{ width: `${spPct}%`, background: 'var(--red)' }}
+
+        {/* Static gloss reflection — sits above the spinning disc, doesn't rotate */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: 8,
+            borderRadius: "50%",
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 48%, rgba(0,0,0,0.12) 100%)",
+            zIndex: 20,
+          }}
         />
       </div>
-      
-      <div className="flex justify-between text-[10px] mb-[14px]" style={{ color: 'var(--text3)' }}>
-        <span>{curTime}</span>
-        <span>4:07</span>
+      <p className="text-[13px] mb-[3px]" style={{ color: "var(--text)" }}>
+        {title}
+      </p>
+      <p className="text-[11px] mb-[12px]" style={{ color: "var(--text3)" }}>
+        {artist} · {album}
+      </p>
+      {/* Progress bar */}
+      <div
+        className="h-[3px] rounded-[2px] mb-[6px] relative"
+        style={{ background: "var(--border)" }}
+      >
+        <div
+          className="h-full rounded-[2px] transition-all duration-1000 ease-linear"
+          style={{ width: `${progress}%`, background: "var(--red)" }}
+        />
       </div>
-      
-      <div className="flex items-center gap-[16px]">
-        <button className="text-[14px] cursor-pointer hover:text-[var(--text)] transition-colors bg-transparent border-none font-mono" style={{ color: 'var(--text3)' }}>⏮</button>
-        <button className="text-[16px] cursor-pointer bg-transparent border-none font-mono" style={{ color: 'var(--red)' }}>▶</button>
-        <button className="text-[14px] cursor-pointer hover:text-[var(--text)] transition-colors bg-transparent border-none font-mono" style={{ color: 'var(--text3)' }}>⏭</button>
-        <button className="text-[11px] cursor-pointer hover:text-[var(--text)] transition-colors bg-transparent border-none font-mono ml-auto" style={{ color: 'var(--text3)' }}>♡</button>
-      </div>
-      
-      <p className="text-[9px] tracking-[.1em] mt-[14px] mb-[6px]" style={{ color: 'var(--text3)' }}>QUEUE</p>
-      
-      <div className="flex flex-col">
-        <div className="flex justify-between text-[10px] py-[4px] border-b" style={{ color: 'var(--text2)', borderColor: 'var(--border)' }}>
-          <span>Instant Crush — Daft Punk</span>
-          <span style={{ color: 'var(--text3)' }}>5:37</span>
-        </div>
-        <div className="flex justify-between text-[10px] py-[4px] border-b" style={{ color: 'var(--text2)', borderColor: 'var(--border)' }}>
-          <span>Get Lucky — Daft Punk</span>
-          <span style={{ color: 'var(--text3)' }}>6:09</span>
-        </div>
-        <div className="flex justify-between text-[10px] py-[4px]" style={{ color: 'var(--text2)' }}>
-          <span>Harder, Better — Daft Punk</span>
-          <span style={{ color: 'var(--text3)' }}>3:44</span>
-        </div>
+      {/* Timestamps */}
+      <div
+        className="flex justify-between text-[10px] mb-[16px]"
+        style={{ color: "var(--text3)" }}
+      >
+        <span>{fmt(elapsed)}</span>
+        <span>{fmt(totalSec)}</span>
       </div>
     </div>
   );

@@ -1,189 +1,50 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Panel, { PanelHead, PanelBody, Dagger } from '@/components/ui/Panel';
-import GithubHeatmap from '@/components/sys/log/github';
-import WakaBar from '@/components/sys/log/wakatime';
-
-// ── Data ──────────────────────────────────────────────────────────────────────
-
-const FILTERS = ['all', 'in progress', 'shipped', 'open source'];
-
-const PROJECTS = [
-  {
-    id: 'zaos',
-    name: 'za0S',
-    badge: 'research',
-    desc: 'Custom OS architecture with a 3-layer semantic filesystem model, xattr integration, and real x86 implementation planning.',
-    why: [
-      <>Every filesystem I&apos;d used treated metadata as an afterthought — I wanted meaning to live <b style={{ color: 'var(--red-ember)', fontWeight: 500 }}>at the kernel boundary</b>, not bolted on top of it.</>,
-      'Challenge: designing a semantic layer that stays independent of any specific runtime or agent.',
-      <>Learned: the hard part was never the code — it was <b style={{ color: 'var(--red-ember)', fontWeight: 500 }}>deciding what the filesystem is allowed to assume</b>.</>,
-    ],
-    stack: ['Rust', 'C', 'systems'],
-    status: 'wip',
-  },
-  {
-    id: 'svg-readme',
-    name: 'svg-readme-gen',
-    badge: 'shipped',
-    desc: 'Animated SVG GitHub profile that mimics fastfetch/neofetch layout with live GraphQL stats injection and GitHub Actions automation.',
-    why: [
-      <>Wanted a GitHub profile that felt like <b style={{ color: 'var(--red-ember)', fontWeight: 500 }}>my actual terminal</b>, not a template with my name swapped in.</>,
-      'Learned: good API design is 90% of the work — wiring GraphQL stats into a live-updating SVG took 3 rewrites to get right.',
-    ],
-    stack: ['Python', 'SVG', 'tooling'],
-    status: 'shipped',
-  },
-  {
-    id: 'terminal-portfolio',
-    name: 'terminal-portfolio',
-    badge: 'shipped',
-    desc: 'Self-contained terminal portfolio page. Unified filesystem panel, vim-style file viewer tabs, live keyboard panel, floating syslog.',
-    why: [
-      'A terminal that looks right is easier to work in — taste is a forcing function, it makes you care about the detail.',
-    ],
-    stack: ['TypeScript', 'Tauri', 'web'],
-    status: 'oss',
-  },
-];
-
-const WAKA = [
-  { lang: 'Rust',       pct: 34.1 },
-  { lang: 'Python',     pct: 24.5 },
-  { lang: 'TypeScript', pct: 17.6 },
-  { lang: 'QML',        pct: 11.3 },
-  { lang: 'Bash',       pct: 4.7  },
-];
-
-const BADGE_STYLES: Record<string, React.CSSProperties> = {
-  shipped:  { color: '#7a9', border: '1px solid #2a4a35' },
-  wip:      { color: 'var(--red-ember)', border: '1px solid var(--border2)' },
-  research: { color: 'var(--red-ember)', border: '1px solid var(--border2)' },
-  oss:      { color: 'var(--red-ember)', border: '1px solid var(--border2)' },
-};
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 
 export default function WorkPage() {
-  const [activeFilter, setActiveFilter] = useState('all');
-
   return (
-    <div>
-      {/* Filter chips */}
-      <div className="flex gap-[8px] mb-[16px]">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setActiveFilter(f)}
-            className="px-[14px] py-[7px] text-[10px] tracking-[1px] uppercase border transition-colors cursor-pointer"
-            style={{
-              borderColor: activeFilter === f ? 'var(--red)' : 'var(--border2)',
-              color: activeFilter === f ? 'var(--red-ember)' : 'var(--text2)',
-              background: activeFilter === f ? 'rgba(182,24,43,0.08)' : 'transparent',
-            }}
+    <div className="h-full flex items-center justify-center p-[24px]">
+      <Panel delay={0.1} className="w-full max-w-[500px]">
+        <PanelHead meta="work.exe">
+          <Dagger /> ~/{" "}
+          <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+            CONSTRUCTION
+          </b>
+        </PanelHead>
+        <PanelBody className="flex flex-col items-center justify-center py-[64px] text-center">
+          <div
+            className="text-[48px] mb-[24px] select-none opacity-80 filter grayscale"
+            style={{ textShadow: "0 0 20px rgba(255, 255, 255, 0.1)" }}
           >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Main grid */}
-      <div
-        className="grid gap-[14px]"
-        style={{ gridTemplateColumns: '1fr 1fr' }}
-      >
-        {/* Left — project cards */}
-        <div className="flex flex-col gap-[14px]">
-          {PROJECTS.map((p) => (
-            <Panel key={p.id}>
-              <PanelHead
-                meta={
-                  <span
-                    className="text-[9px] tracking-[0.5px] uppercase px-[7px] py-[3px]"
-                    style={BADGE_STYLES[p.status]}
-                  >
-                    {p.badge}
-                  </span>
-                }
-              >
-                <Dagger /> <b style={{ color: 'var(--text)' }}>{p.name}</b>
-              </PanelHead>
-              <PanelBody>
-                <p className="text-[12px] leading-[1.6] mb-[12px]" style={{ color: 'var(--text2)' }}>
-                  {p.desc}
-                </p>
-                {/* Why section */}
-                <div
-                  className="border-t pt-[10px] mt-[4px]"
-                  style={{ borderColor: 'var(--border)' }}
-                >
-                  <p
-                    className="text-[10px] tracking-[1.5px] uppercase mb-[8px]"
-                    style={{ color: 'var(--red)' }}
-                  >
-                    // why i built it
-                  </p>
-                  {p.why.map((line, i) => (
-                    <p
-                      key={i}
-                      className="text-[11px] leading-[1.6] mb-[6px] pl-[14px] relative"
-                      style={{ color: 'var(--text)', opacity: 0.85 }}
-                    >
-                      <span
-                        className="absolute left-0"
-                        style={{ color: 'var(--red-dim)' }}
-                      >
-                        →
-                      </span>
-                      {line}
-                    </p>
-                  ))}
-                </div>
-                {/* Stack chips */}
-                <div className="flex gap-[6px] mt-[12px]">
-                  {p.stack.map((s) => (
-                    <span
-                      key={s}
-                      className="text-[9px] px-[8px] py-[3px] border"
-                      style={{ color: 'var(--text2)', borderColor: 'var(--border)' }}
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </PanelBody>
-            </Panel>
-          ))}
-        </div>
-
-        {/* Right — heatmap + wakatime */}
-        <div className="flex flex-col gap-[14px]">
-          {/* GitHub heatmap */}
-          <Panel>
-            <PanelHead>
-              <Dagger /> <b style={{ color: 'var(--text)' }}>GH</b> github_heatmap.svg
-            </PanelHead>
-            <PanelBody>
-              <GithubHeatmap />
-            </PanelBody>
-          </Panel>
-
-          {/* Wakatime */}
-          <Panel>
-            <PanelHead meta="142h 18m / 30d">
-              <Dagger /> <b style={{ color: 'var(--text)' }}>WAKA</b> wakatime.log
-            </PanelHead>
-            <PanelBody>
-              {WAKA.map((w, i) => (
-                <div key={w.lang} style={{ marginBottom: i === WAKA.length - 1 ? 0 : undefined }}>
-                  <WakaBar lang={w.lang} pct={w.pct} />
-                </div>
-              ))}
-            </PanelBody>
-          </Panel>
-        </div>
-      </div>
+            🚧
+          </div>
+          <h2
+            className="text-[14px] font-bold tracking-[3px] uppercase mb-[12px]"
+            style={{ color: "var(--red)", fontFamily: "var(--mono)" }}
+          >
+            Under Construction
+          </h2>
+          <p
+            className="text-[12px] max-w-[40ch] leading-[1.6]"
+            style={{ color: "var(--text2)" }}
+          >
+            The work directory is currently being refactored. Check back later
+            for case studies and deeper dives into the architecture.
+          </p>
+          <div
+            className="mt-[32px] pt-[24px] border-t w-[80%] flex justify-center"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <p
+              className="text-[10px] tracking-[1.5px] uppercase"
+              style={{ color: "var(--text3)", fontFamily: "var(--mono)" }}
+            >
+              &gt; aborting process...
+            </p>
+          </div>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

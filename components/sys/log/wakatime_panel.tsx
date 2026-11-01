@@ -20,17 +20,26 @@ const FALLBACK: WakaLang[] = [
 
 export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
   const [langs, setLangs] = useState<WakaLang[]>(FALLBACK);
-  const [meta, setMeta] = useState("...");
+  const [meta, setMeta] = useState("syncing...");
 
   useEffect(() => {
     fetch("/api/sys/wakatime")
       .then((r) => r.json())
       .then((payload) => {
-        if (payload.error) return;
+        if (
+          payload.error ||
+          !Array.isArray(payload.languages) ||
+          payload.languages.length === 0
+        ) {
+          setMeta("cached / 30d");
+          return;
+        }
         setLangs(payload.languages);
-        setMeta(payload.total + " / 30d");
+        setMeta(`${payload.total || "0 hrs"} / ${payload.range || "30d"}`);
       })
-      .catch(() => {});
+      .catch(() => {
+        setMeta("cached / 30d");
+      });
   }, []);
 
   return (

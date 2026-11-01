@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface JournalPost {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function RotatingJournal({ posts }: Props) {
+  const router = useRouter();
   const [items, setItems] = useState<JournalPost[]>(posts || []);
   const [prevPosts, setPrevPosts] = useState(posts);
 
@@ -79,11 +81,7 @@ export default function RotatingJournal({ posts }: Props) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (typeof document !== "undefined") {
-                  document.dispatchEvent(
-                    new CustomEvent("open-journal", { detail: post.title }),
-                  );
-                }
+                router.push(`/journal?entry=${encodeURIComponent(post.title)}`);
               }}
               className="py-[12px] border-b-[1px] flex flex-col text-left group transition-colors hover:bg-[var(--red-hover-tint)] px-[8px] -mx-[8px] rounded-[4px] shrink-0"
               style={{

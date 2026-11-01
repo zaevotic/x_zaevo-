@@ -3,7 +3,6 @@ import MonitorBar from "@/components/ui/MonitorBar";
 import StatusBar from "@/components/ui/StatusBar";
 import dynamic from "next/dynamic";
 const LetterGlitch = dynamic(() => import("@/components/ui/LetterGlitch"), { ssr: false, loading: () => null });
-import JournalScratchpad from "@/components/ui/JournalScratchpad";
 import ResumeScratchpad from "@/components/ui/ResumeScratchpad";
 
 export default function WorkspacesLayout({
@@ -17,7 +16,6 @@ export default function WorkspacesLayout({
       <MonitorBar />
       <main className="flex-1 overflow-y-auto overflow-x-hidden p-[10px] w-full after:block after:h-[1px] after:mt-[-1px]">{children}</main>
       <StatusBar />
-      <JournalScratchpad />
       <ResumeScratchpad />
     </div>
   );

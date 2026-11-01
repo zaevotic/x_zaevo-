@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const WS_MAP: Record<string, string> = {
   "/home": "1:home",
+  "/journal": "2:journal",
   "/term": "3:term",
   "/signal": "4:signal",
 };
@@ -50,12 +51,7 @@ export default function StatusBar() {
     return () => clearInterval(id);
   }, []);
 
-  const wsname = (() => {
-    const isJournalOpen = false; // placeholder if needed later
-    return isJournalOpen
-      ? "3:journal"
-      : WS_MAP[pathname] ?? pathname.replace("/", "");
-  })();
+  const wsname = WS_MAP[pathname] ?? pathname.replace("/", "");
 
   const minutes = Math.floor(sessionSec / 60)
     .toString()

@@ -54,6 +54,13 @@ export default function SignalTerminal() {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [loadingCommits, setLoadingCommits] = useState(true);
   const [commitError, setCommitError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyCurl = () => {
+    navigator.clipboard.writeText("curl -s https://x-zaevo.vercel.app/pubkey");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     fetch("/api/sys/github")
@@ -127,12 +134,15 @@ export default function SignalTerminal() {
             style={{ color: "var(--text3)" }}
           >
             <span>[ FINGERPRINT ]</span>
-            <span
-              className="lowercase tracking-normal italic text-[9px]"
+            <a
+              href="/pubkey.pem"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lowercase tracking-normal text-[9px] no-underline transition-colors hover:text-[var(--red)]"
               style={{ color: "var(--text2)" }}
             >
-              // just for aesthetics... for now.
-            </span>
+              [ raw /pubkey.pem ]
+            </a>
           </div>
           <div
             className="font-mono text-[11px] p-[10px] border leading-[1.6]"
@@ -144,12 +154,12 @@ export default function SignalTerminal() {
               wordBreak: "break-all",
             }}
           >
-            pub ed25519 2026-07-14 [SC] [expires: 2028-07-14]
+            pub rsa2048 2026-11-01 [SC] [sha256]
             <br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7A9F 8B2C 4D1E 6F3A 9C0B 2D5E
-            8F1A 4C7B 9E2D 3F6A
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D387 225B EB14 57A6 F1E2 C8F8
+            2A16 04DE C83A 62E5
             <br />
-            uid [ultimate] zaevo &lt;serpmillers@proton.me&gt;
+            uid [ultimate] zaevo &lt;zaevotic@proton.me&gt;
           </div>
         </div>
 
@@ -160,19 +170,31 @@ export default function SignalTerminal() {
             style={{ color: "var(--text3)" }}
           >
             <span>[ DIRECT CONNECT ]</span>
-            <span
-              className="lowercase tracking-normal italic text-[9px]"
-              style={{ color: "var(--text2)" }}
+            <button
+              type="button"
+              onClick={copyCurl}
+              className="lowercase tracking-normal text-[9px] cursor-pointer transition-colors hover:text-[var(--red)]"
+              style={{
+                color: copied ? "var(--green)" : "var(--text2)",
+                background: "none",
+                border: "none",
+                padding: 0,
+              }}
             >
-              // just for aesthetics... for now.
-            </span>
+              {copied ? "[ copied! ]" : "[ click to copy ]"}
+            </button>
           </div>
-          <div className="font-mono text-[11px] flex gap-[8px]">
+          <button
+            type="button"
+            onClick={copyCurl}
+            className="font-mono text-[11px] flex gap-[8px] text-left cursor-pointer transition-colors hover:opacity-80"
+            style={{ background: "none", border: "none", padding: 0 }}
+          >
             <span style={{ color: "var(--text3)" }}>$</span>
             <span style={{ color: "var(--text)" }}>
-              curl -s https://zaevo.me/pubkey
+              curl -s https://x-zaevo.vercel.app/pubkey
             </span>
-          </div>
+          </button>
         </div>
 
         {/* Separator */}

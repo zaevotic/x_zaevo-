@@ -8,20 +8,13 @@ import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
 const TABS = [
   { num: "1", label: "home", href: "/home" },
-  { num: "2", label: "journal", action: "open-journal" },
+  { num: "2", label: "journal", href: "/journal" },
   { num: "3", label: "term", href: "/term" },
   { num: "4", label: "signal", href: "/signal" },
 ];
 
 export default function MonitorBar() {
   const pathname = usePathname();
-  const [isJournalOpen, setIsJournalOpen] = useState(false);
-
-  useEffect(() => {
-    const handleJournalState = (e: Event) => setIsJournalOpen((e as CustomEvent).detail);
-    document.addEventListener("journal-state", handleJournalState);
-    return () => document.removeEventListener("journal-state", handleJournalState);
-  }, []);
 
   return (
     <header
@@ -51,38 +44,12 @@ export default function MonitorBar() {
 
         {/* Workspace tabs */}
         <nav className="flex gap-[4px]">
-          {TABS.map(({ num, label, href, action }) => {
-            if (action) {
-              const active = isJournalOpen;
-              return (
-                <button
-                  key={label}
-                  onClick={() => document.dispatchEvent(new CustomEvent(action))}
-                  className="relative text-[13px] px-[6px] sm:px-[10px] py-[4px] rounded-[4px] transition-colors duration-100 tracking-[0.02em] cursor-pointer"
-                  style={{ color: active ? "var(--red)" : "var(--text3)", border: "none", background: "none", outline: "none" }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = "var(--text2)"; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = "var(--text3)"; }}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="active-workspace"
-                      className="absolute inset-0 rounded-[4px]"
-                      style={{ background: "var(--red-mute)" }}
-                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                    />
-                  )}
-                  <span className="relative z-10">
-                    <span className="hidden sm:inline">{num}:</span>{label}
-                  </span>
-                </button>
-              );
-            }
-
-            const active = !isJournalOpen && href && (pathname === href || pathname.startsWith(href as string + "/"));
+          {TABS.map(({ num, label, href }) => {
+            const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
-                href={href as string}
+                href={href}
                 className="relative text-[13px] px-[6px] sm:px-[10px] py-[4px] rounded-[4px] transition-colors duration-100 tracking-[0.02em]"
                 style={{
                   color: active ? "var(--red)" : "var(--text3)",

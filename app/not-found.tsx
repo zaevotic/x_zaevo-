@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import { AlertTriangle, Terminal, ArrowLeft } from "lucide-react";
 import MonitorBar from "@/components/ui/MonitorBar";
 import StatusBar from "@/components/ui/StatusBar";
-import JournalScratchpad from "@/components/ui/JournalScratchpad";
 import ResumeScratchpad from "@/components/ui/ResumeScratchpad";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 import ZaevoLogo from "@/components/ui/ZaevoLogo";
@@ -155,7 +154,6 @@ export default function NotFound() {
       </main>
 
       <StatusBar />
-      <JournalScratchpad />
       <ResumeScratchpad />
     </div>
   );

@@ -28,9 +28,9 @@ const pirataOne = Pirata_One({
 });
 
 export const metadata: Metadata = {
-  title: "zaevo — void",
+  title: "zaevo - void",
   description:
-    "Portfolio of zaevo — engineering student building things at the intersection of systems, security, and developer tooling.",
+    "user.exe with a pinch of tiles",
   icons: {
     icon: [
       { url: "/zaevo-logo.svg", type: "image/svg+xml" },

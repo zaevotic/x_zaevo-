@@ -31,6 +31,11 @@ export const metadata: Metadata = {
   title: "zaevo — void",
   description:
     "Portfolio of zaevo — engineering student building things at the intersection of systems, security, and developer tooling.",
+  icons: {
+    icon: [
+      { url: "/zaevo-logo.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({

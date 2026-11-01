@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
 const TABS = [
   { num: "1", label: "home", href: "/home" },
-  { num: "2", label: "work", href: "/work" },
-  { num: "3", label: "journal", action: "open-journal" },
-  { num: "4", label: "term", href: "/term" },
-  { num: "5", label: "signal", href: "/signal" },
+  { num: "2", label: "journal", action: "open-journal" },
+  { num: "3", label: "term", href: "/term" },
+  { num: "4", label: "signal", href: "/signal" },
 ];
 
 export default function MonitorBar() {
@@ -35,17 +35,7 @@ export default function MonitorBar() {
       <div className="flex items-center gap-[12px] flex-1">
         {/* Brand */}
         <div className="flex items-center gap-[8px]">
-          <span
-            className="flex-shrink-0"
-            style={{
-              display: "inline-block",
-              width: 14,
-              height: 14,
-              background: "var(--red)",
-              clipPath: "polygon(50% 0%,100% 50%,50% 100%,0% 50%)",
-              boxShadow: "0 0 12px var(--red-ember)",
-            }}
-          />
+          <ZaevoLogo size={16} className="flex-shrink-0" />
           <span
             className="hidden sm:block text-[13px] font-bold tracking-[0.08em]"
             style={{ color: "var(--red)" }}

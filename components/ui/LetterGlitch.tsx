@@ -31,7 +31,7 @@ const calculateGrid = (width: number, height: number, charWidth: number, charHei
   return { columns, rows };
 };
 
-const LetterGlitch = ({
+export default function LetterGlitch({
   glitchColors = ["#b6182b", "#ff2436", "#c47c2e", "#5c1018"],
   className = "",
   glitchSpeed = 50,
@@ -39,7 +39,7 @@ const LetterGlitch = ({
   outerVignette = true,
   smooth = true,
   characters = "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01",
-}) => {
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const letters = useRef<any[]>([]);
@@ -47,6 +47,10 @@ const LetterGlitch = ({
   const context = useRef<CanvasRenderingContext2D | null>(null);
   const lastGlitchTime = useRef(Date.now());
   const activeLetters = useRef(new Set<number>());
+  // New refs for visibility & throttling
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisibleRef = useRef(true);
+  const lastFrameRef = useRef(0);
 
   const lettersAndSymbols = useMemo(() => Array.from(characters), [characters]);
   const parsedColors = useMemo(
@@ -184,6 +188,20 @@ const LetterGlitch = ({
 
   const animate = () => {
     const now = Date.now();
+
+    // Pause if component is not visible (IntersectionObserver)
+    if (!isVisibleRef.current) {
+      animationRef.current = requestAnimationFrame(animate);
+      return;
+    }
+
+    // Throttle to ~30 fps (33 ms per frame)
+    if (now - lastFrameRef.current < 33) {
+      animationRef.current = requestAnimationFrame(animate);
+      return;
+    }
+    lastFrameRef.current = now;
+
     if (now - lastGlitchTime.current >= glitchSpeed) {
       updateLetters();
       lastGlitchTime.current = now;
@@ -196,6 +214,22 @@ const LetterGlitch = ({
     animationRef.current = requestAnimationFrame(animate);
   };
 
+  // ── Visibility observer ────────────────────────────────────
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new IntersectionObserver((entries) => {
+      isVisibleRef.current = entries[0].isIntersecting;
+      if (isVisibleRef.current) {
+        // resume animation when element becomes visible
+        animate();
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // ── Canvas setup & resize handling ───────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -205,7 +239,6 @@ const LetterGlitch = ({
     animate();
 
     let resizeTimeout: NodeJS.Timeout;
-
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
@@ -214,7 +247,6 @@ const LetterGlitch = ({
         animate();
       }, 100);
     };
-
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -271,4 +303,3 @@ const LetterGlitch = ({
   );
 };
 
-export default LetterGlitch;

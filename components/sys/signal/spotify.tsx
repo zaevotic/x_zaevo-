@@ -73,68 +73,90 @@ export default function SpotifyPanel() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Vinyl disc — album art masked behind spinning grooves */}
-      <div
-        className="w-full max-w-[200px] aspect-square rounded-[3px] mb-[14px] relative border"
-        style={{ background: "var(--bg)", borderColor: "var(--border2)" }}
-      >
-        {/* Spinning disc — clips everything inside to a circle */}
+      {/* Album row — vinyl disc + play button side by side */}
+      <div className="flex items-center gap-[16px] mb-[14px]">
+        {/* Vinyl disc — album art masked behind spinning grooves */}
         <div
-          className="absolute rounded-full overflow-hidden animate-[spin_8s_linear_infinite]"
-          style={{ inset: 8 }}
+          className="w-full max-w-[200px] aspect-square rounded-[3px] relative border shrink-0"
+          style={{ background: "var(--bg)", borderColor: "var(--border2)" }}
         >
-          {/* Album art base — slightly dimmed so grooves read on top */}
-          {track?.albumArt && (
-            <img
-              src={track.albumArt}
-              alt={album}
-              className="absolute inset-0 w-full h-full object-cover opacity-75"
+          {/* Spinning disc — clips everything inside to a circle */}
+          <div
+            className="absolute rounded-full overflow-hidden animate-[spin_8s_linear_infinite]"
+            style={{ inset: 8 }}
+          >
+            {/* Album art base — slightly dimmed so grooves read on top */}
+            {track?.albumArt && (
+              <img
+                src={track.albumArt}
+                alt={album}
+                className="absolute inset-0 w-full h-full object-cover opacity-75"
+              />
+            )}
+
+            {/* Vinyl groove conic-gradient — semi-transparent over the art */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `conic-gradient(
+                  rgba(0,0,0,0.35) 0deg,   rgba(255,255,255,0.06) 18deg,
+                  rgba(0,0,0,0.35) 36deg,  rgba(0,0,0,0.4)        72deg,
+                  rgba(255,255,255,0.06) 108deg, rgba(0,0,0,0.35) 144deg,
+                  rgba(0,0,0,0.4)  180deg, rgba(255,255,255,0.06) 216deg,
+                  rgba(0,0,0,0.35) 252deg, rgba(255,255,255,0.06) 288deg,
+                  rgba(0,0,0,0.35) 324deg, rgba(0,0,0,0.4)        360deg
+                )`,
+              }}
             />
-          )}
 
-          {/* Vinyl groove conic-gradient — semi-transparent over the art */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `conic-gradient(
-                rgba(0,0,0,0.35) 0deg,   rgba(255,255,255,0.06) 18deg,
-                rgba(0,0,0,0.35) 36deg,  rgba(0,0,0,0.4)        72deg,
-                rgba(255,255,255,0.06) 108deg, rgba(0,0,0,0.35) 144deg,
-                rgba(0,0,0,0.4)  180deg, rgba(255,255,255,0.06) 216deg,
-                rgba(0,0,0,0.35) 252deg, rgba(255,255,255,0.06) 288deg,
-                rgba(0,0,0,0.35) 324deg, rgba(0,0,0,0.4)        360deg
-              )`,
-            }}
-          />
+            {/* Center spindle hole */}
+            <div
+              className="absolute rounded-full border-[2px]"
+              style={{
+                width: 22,
+                height: 22,
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                background: "var(--bg1)",
+                borderColor: "var(--red-dim)",
+                zIndex: 10,
+              }}
+            />
+          </div>
 
-          {/* Center spindle hole */}
+          {/* Static gloss reflection — sits above the spinning disc, doesn't rotate */}
           <div
-            className="absolute rounded-full border-[2px]"
+            className="absolute pointer-events-none"
             style={{
-              width: 22,
-              height: 22,
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              background: "var(--bg1)",
-              borderColor: "var(--red-dim)",
-              zIndex: 10,
+              inset: 8,
+              borderRadius: "50%",
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 48%, rgba(0,0,0,0.12) 100%)",
+              zIndex: 20,
             }}
           />
         </div>
 
-        {/* Static gloss reflection — sits above the spinning disc, doesn't rotate */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            inset: 8,
-            borderRadius: "50%",
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 48%, rgba(0,0,0,0.12) 100%)",
-            zIndex: 20,
-          }}
-        />
+        {/* Play on Spotify — sits to the right of the vinyl */}
+        {track?.url && (
+          <a
+            href={track.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-[10px] px-[20px] py-[12px] text-[12px] tracking-[1.5px] uppercase font-bold cursor-pointer transition-opacity no-underline hover:opacity-80"
+            style={{
+              background: "var(--red)",
+              color: "var(--bg)",
+              fontFamily: "var(--mono)",
+            }}
+          >
+            <span style={{ fontSize: "18px", lineHeight: 1 }}>▶</span>
+            play song
+          </a>
+        )}
       </div>
+
       <p className="text-[13px] mb-[3px]" style={{ color: "var(--text)" }}>
         {title}
       </p>

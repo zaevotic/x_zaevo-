@@ -15,6 +15,7 @@ import {
 } from "react-icons/vsc";
 import KeyboardPanel from "@/components/sys/signal/keyboard";
 import KeybindsPanel from "@/components/sys/signal/keybinds";
+import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -63,147 +64,6 @@ const JOURNAL_LOGS: LogEntry[] = [
   },
 ];
 
-const LL_FILES = [
-  {
-    prefix: "drwxr-xr-x      - zaevo 14 Jul 01:32   -I  ",
-    color: "var(--amber)",
-    Icon: VscFolder,
-    name: ".git",
-  },
-  {
-    prefix: ".rw-r--r--    561 zaevo 14 Jul 01:10   --  ",
-    color: "var(--amber)",
-    Icon: VscSettingsGear,
-    name: ".gitignore",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 13 Jul 17:50   -I  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: ".next",
-  },
-  {
-    prefix: ".rw-r--r--  2.4Ki zaevo 13 Jul 13:27   --  ",
-    color: "var(--amber)",
-    Icon: VscMarkdown,
-    name: "AGENTS.md",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 14 Jul 01:32   -M  ",
-    color: "var(--amber)",
-    Icon: VscFolder,
-    name: "app",
-  },
-  {
-    prefix: ".rw-r--r--  109Ki zaevo 13 Jul 23:05   --  ",
-    color: "var(--text2)",
-    Icon: VscLock,
-    name: "bun.lock",
-  },
-  {
-    prefix: ".rw-r--r--  4.0Ki zaevo 13 Jul 13:27   --  ",
-    color: "var(--text2)",
-    Icon: VscMarkdown,
-    name: "CLAUDE.md",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 27 Jun 10:29   -N  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "components",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 27 Jun 10:30   --  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "config",
-  },
-  {
-    prefix: ".rw-r--r--    465 zaevo 27 Jun 02:13   --  ",
-    color: "var(--red)",
-    Icon: VscSettingsGear,
-    name: "eslint.config.mjs",
-  },
-  {
-    prefix: ".rw-r--r--  1.0Ki zaevo 26 Jun 22:18   --  ",
-    color: "var(--text2)",
-    Icon: VscFile,
-    name: "LICENSE",
-  },
-  {
-    prefix: ".rw-r--r--    251 zaevo 14 Jul 01:03   -I  ",
-    color: "var(--text2)",
-    Icon: VscFileCode,
-    name: "next-env.d.ts",
-  },
-  {
-    prefix: ".rw-r--r--    133 zaevo 27 Jun 02:13   --  ",
-    color: "var(--text2)",
-    Icon: VscSettingsGear,
-    name: "next.config.ts",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 13 Jul 23:05   -I  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "node_modules",
-  },
-  {
-    prefix: ".rw-r--r--    739 zaevo 13 Jul 23:05   --  ",
-    color: "var(--amber)",
-    Icon: VscJson,
-    name: "package.json",
-  },
-  {
-    prefix: ".rw-r--r--   16Ki zaevo 13 Jul 12:50   -I  ",
-    color: "var(--amber)",
-    Icon: VscMarkdown,
-    name: "PORTFOLIO_UPGRADE_GUIDE.md",
-  },
-  {
-    prefix: ".rw-r--r--     94 zaevo 27 Jun 02:13   --  ",
-    color: "var(--red)",
-    Icon: VscSettingsGear,
-    name: "postcss.config.mjs",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 27 Jun 10:33   --  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "public",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 13 Jul 17:46   -I  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "react_bits_refs",
-  },
-  {
-    prefix: ".rw-r--r--  1.4Ki zaevo 27 Jun 02:13   --  ",
-    color: "var(--text2)",
-    Icon: VscMarkdown,
-    name: "README-next.md",
-  },
-  {
-    prefix: ".rw-r--r--     43 zaevo 26 Jun 22:19   --  ",
-    color: "var(--amber)",
-    Icon: VscMarkdown,
-    name: "README.md",
-  },
-  {
-    prefix: "drwxr-xr-x      - zaevo 13 Jul 13:16   --  ",
-    color: "var(--text2)",
-    Icon: VscFolder,
-    name: "ref_htmls",
-  },
-  {
-    prefix: ".rw-r--r--    666 zaevo 27 Jun 02:13   --  ",
-    color: "var(--amber)",
-    Icon: VscJson,
-    name: "tsconfig.json",
-  },
-];
-
 const TREE_DATA = [
   { p: "├──  ", n: "AGENTS.md" },
   { p: "├──  ", n: "app", isDir: true },
@@ -218,9 +78,7 @@ const TREE_DATA = [
   { p: "│   │   ├──  ", n: "signal", isDir: true },
   { p: "│   │   │   └──  ", n: "page.tsx" },
   { p: "│   │   ├──  ", n: "template.tsx" },
-  { p: "│   │   ├──  ", n: "term", isDir: true },
-  { p: "│   │   │   └──  ", n: "page.tsx" },
-  { p: "│   │   └──  ", n: "work", isDir: true },
+  { p: "│   │   └──  ", n: "term", isDir: true },
   { p: "│   │       └──  ", n: "page.tsx" },
   { p: "│   ├──  ", n: "favicon.ico" },
   { p: "│   ├──  ", n: "globals.css" },
@@ -270,13 +128,6 @@ const TREE_DATA = [
   { p: "│   └──  ", n: "magic_bento.md" },
   { p: "├──  ", n: "README-next.md" },
   { p: "├──  ", n: "README.md" },
-  { p: "├──  ", n: "ref_htmls", isDir: true },
-  { p: "│   ├──  ", n: "MAIN.html" },
-  { p: "│   ├──  ", n: "ws1.html" },
-  { p: "│   ├──  ", n: "ws2.html" },
-  { p: "│   ├──  ", n: "ws3.html" },
-  { p: "│   ├──  ", n: "ws4.html" },
-  { p: "│   └──  ", n: "ws5.html" },
   { p: "└──  ", n: "tsconfig.json" },
 ];
 
@@ -555,56 +406,33 @@ export default function TermPage() {
             {/* fastfetch */}
             <div className="h-[6px]" />
             <ShellLine cmd="fastfetch" time="15:35:10" />
-            <div style={{ color: "var(--border2)" }}>
-              ┌─────────────────────────────────────────────────┐
-            </div>
-            {FASTFETCH_ROWS.map(({ k, v }) => (
-              <div key={k} style={{ color: "var(--text2)" }}>
-                {"  "}
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 88,
-                    color: "var(--text3)",
-                  }}
-                >
-                  {k}
-                </span>
-                <span style={{ color: "var(--text)" }}>{v}</span>
+            <div className="flex items-center gap-[14px]">
+              <div className="shrink-0 flex items-center justify-center">
+                <ZaevoLogo size={185} />
               </div>
-            ))}
-            <div style={{ color: "var(--border2)" }}>
-              └─────────────────────────────────────────────────┘
-            </div>
-
-            {/* ll -a */}
-            <div className="h-[6px]" />
-            <ShellLine
-              cmd="ll"
-              flag=" -a"
-              arg=" ~/repos/x_zaevo-"
-              time="15:35:12"
-            />
-            <div
-              className="mt-[4px]"
-              style={{
-                color: "var(--text2)",
-                whiteSpace: "pre",
-                overflowX: "hidden",
-              }}
-            >
-              <div style={{ color: "var(--text3)" }}>
-                {`Permissions  Size User  Date Modified Git  Name`}
-              </div>
-              {LL_FILES.map((f) => (
-                <div key={f.name}>
-                  <span className="whitespace-pre">{f.prefix}</span>
-                  <span style={{ color: f.color }}>
-                    <f.Icon size={12} className="inline mb-[2px] mr-[6px]" />
-                    {f.name}
-                  </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate" style={{ color: "var(--border2)" }}>
+                  ┌─────────────────────────────────────────────────┐
                 </div>
-              ))}
+                {FASTFETCH_ROWS.map(({ k, v }) => (
+                  <div key={k} className="truncate" style={{ color: "var(--text2)" }}>
+                    {"  "}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 88,
+                        color: "var(--text3)",
+                      }}
+                    >
+                      {k}
+                    </span>
+                    <span style={{ color: "var(--text)" }}>{v}</span>
+                  </div>
+                ))}
+                <div className="truncate" style={{ color: "var(--border2)" }}>
+                  └─────────────────────────────────────────────────┘
+                </div>
+              </div>
             </div>
 
             {/* git log */}
@@ -906,9 +734,11 @@ function FsRow({
   );
 }
 
+const MAX_LOG_LINES = 7;
+
 function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
   const [entries, setEntries] = useState(() => 
-    initialEntries.map((e, i) => ({
+    initialEntries.slice(-MAX_LOG_LINES).map((e, i) => ({
       ...e,
       id: `init-${i}`,
       time: new Date(Date.now() - (initialEntries.length - 1 - i) * 3200)
@@ -921,7 +751,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
 
   useEffect(() => {
     const id = setInterval(() => {
-      const endpoints = ["/api/sys/spotify", "/api/sys/github", "/api/sys/wakatime", "/work", "/home", "/signal"];
+      const endpoints = ["/api/sys/spotify", "/api/sys/github", "/api/sys/wakatime", "/home", "/term", "/signal"];
       const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
       const ms = Math.floor(Math.random() * 800) + 15;
       const appMs = ms - Math.floor(Math.random() * 5);
@@ -938,7 +768,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
 
       setEntries(prev => {
         const next = [...prev, newEntry];
-        return next.length > 50 ? next.slice(next.length - 50) : next;
+        return next.length > MAX_LOG_LINES ? next.slice(-MAX_LOG_LINES) : next;
       });
     }, 800 + Math.random() * 2000);
 
@@ -955,14 +785,14 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
     const baseTime = new Date("2026-07-13T15:36:35");
     return (
       <div className="flex flex-col gap-[2px]">
-        {initialEntries.map((e, i) => {
+        {initialEntries.slice(-MAX_LOG_LINES).map((e, i) => {
           const ts = new Date(baseTime.getTime() - (initialEntries.length - 1 - i) * 3200);
           const hms = [ts.getHours(), ts.getMinutes(), ts.getSeconds()].map(x => String(x).padStart(2, "0")).join(":");
           return (
-            <div key={`static-${i}`} className="flex gap-[8px] text-[10px] leading-[1.7]">
+            <div key={`static-${i}`} className="flex gap-[8px] text-[10px] leading-[1.7] min-w-0">
               <span style={{ color: "var(--text3)", flexShrink: 0 }}>{hms}</span>
               <span style={{ width: 36, flexShrink: 0, color: LEVEL_COLOR[e.level] }}>{e.level.toUpperCase()}</span>
-              <span style={{ color: "var(--text2)" }}>{e.msg}</span>
+              <span className="truncate min-w-0 flex-1" style={{ color: "var(--text2)" }}>{e.msg}</span>
             </div>
           );
         })}
@@ -985,7 +815,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
           .map((x) => String(x).padStart(2, "0"))
           .join(":");
         return (
-          <div key={e.id} className="flex gap-[8px] text-[10px] leading-[1.7]">
+          <div key={e.id} className="flex gap-[8px] text-[10px] leading-[1.7] min-w-0">
             <span style={{ color: "var(--text3)", flexShrink: 0 }}>{hms}</span>
             <span
               style={{
@@ -996,7 +826,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
             >
               {e.level.toUpperCase()}
             </span>
-            <span style={{ color: "var(--text2)", wordBreak: "break-all" }}>{e.msg}</span>
+            <span className="truncate min-w-0 flex-1" style={{ color: "var(--text2)" }}>{e.msg}</span>
           </div>
         );
       })}

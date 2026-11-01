@@ -1,6 +1,8 @@
+"use client";
 import MonitorBar from "@/components/ui/MonitorBar";
 import StatusBar from "@/components/ui/StatusBar";
-import LetterGlitch from "@/components/ui/LetterGlitch";
+import dynamic from "next/dynamic";
+const LetterGlitch = dynamic(() => import("@/components/ui/LetterGlitch"), { ssr: false, loading: () => null });
 import JournalScratchpad from "@/components/ui/JournalScratchpad";
 import ResumeScratchpad from "@/components/ui/ResumeScratchpad";
 

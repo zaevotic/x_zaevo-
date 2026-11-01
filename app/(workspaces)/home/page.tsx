@@ -1,14 +1,24 @@
 "use client";
 
-import Link from "next/link";
-
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 import SystemLogPanel from "@/components/ui/SystemLogPanel";
 import FeaturedProjectsPanel from "@/components/ui/FeaturedProjectsPanel";
 import GithubHeatmap from "@/components/sys/log/github";
 import HeroMarquee from "@/components/ui/HeroMarquee";
-import RotatingJournal from "@/components/ui/RotatingJournal";
+import dynamic from "next/dynamic";
+const RotatingJournal = dynamic(() => import("@/components/ui/RotatingJournal"), {
+  ssr: false,
+  // simple placeholder while the client‑only component loads
+  loading: () => (
+    <p className="text-[12px]" style={{ color: "var(--text3)" }}>Loading journal…</p>
+  ),
+});
 import WakaTimePanel from "@/components/sys/log/wakatime_panel";
+import JournalHeader from "@/components/ui/JournalHeader";
+import { useEffect, useState } from "react";
+
+
+// Posts will be fetched from the API
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -27,50 +37,28 @@ const TECH_STACK = [
     category: "LEARNING",
     skills: ["RUST", "TYPESCRIPT", "JAVASCRIPT", "SHELL", "REDIS", "PRISMA"],
   },
-];
 
-const WAKA = [
-  { lang: "Rust", pct: 34.1 },
-  { lang: "Python", pct: 24.5 },
-  { lang: "TypeScript", pct: 17.6 },
-  { lang: "QML", pct: 11.3 },
-  { lang: "Bash", pct: 4.7 },
-];
+          ];
 
-const POSTS = [
-  {
-    date: "2025-11-12",
-    tag: "systems",
-    title: "Designing a Semantic Filesystem Without an Agent",
-    excerpt:
-      "Why the semantic layer in zaOS lives independently of any AI runtime, and how xattr can carry meaning at the kernel boundary without special-casing anything.",
-  },
-  {
-    date: "2025-10-28",
-    tag: "wayland",
-    title: "Niri Is What I Wanted Sway to Be",
-    excerpt:
-      "A month in with the scrollable-columns compositor. What the model gets right, where the rough edges are, and why I'm not going back.",
-  },
-  {
-    date: "2025-10-04",
-    tag: "tooling",
-    title: "Generating Animated SVGs with GitHub Actions",
-    excerpt:
-      "Injecting live GraphQL stats into a fastfetch-style SVG and auto-committing via Actions. The full pipeline, the gotchas, and what I'd do differently.",
-  },
-  {
-    date: "2025-09-15",
-    tag: "rust",
-    title: "Why I Reach for Rust on Side Projects Now",
-    excerpt:
-      "Not an essay about memory safety. About the feedback loop: the compiler as a collaborator that tells you exactly what you got wrong, immediately.",
-  },
-];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
+  // State for journal posts fetched from API
+  type JournalPost = {
+    date: string;
+    tag: string;
+    title: string;
+    excerpt: string;
+  };
+
+  const [posts, setPosts] = useState<JournalPost[]>([]);
+
+  useEffect(() => {
+    fetch("/api/usr/journal")
+      .then((res) => res.json())
+      .then(setPosts);
+  }, []);
   return (
     <div className="grid gap-[10px] grid-cols-1 md:grid-cols-[2.2fr_1fr] xl:grid-cols-[3.2fr_1fr]">
       {/* MAIN LEFT COLUMN */}
@@ -92,7 +80,7 @@ export default function HomePage() {
                     className="text-[11px] mb-[10px]"
                     style={{ color: "var(--text3)", fontFamily: "var(--mono)" }}
                   >
-                    // {group.category}
+                    {"// "}{group.category}
                   </p>
                   <div className="flex flex-wrap gap-[8px]">
                     {group.skills.map((skill) => (
@@ -128,7 +116,7 @@ export default function HomePage() {
                     className="text-[11px] tracking-[3px] uppercase mb-[12px]"
                     style={{ color: "var(--red)" }}
                   >
-                    // portfolio
+                    {"// portfolio"}
                   </p>
                   {/* Wordmark */}
                   <h1
@@ -137,8 +125,7 @@ export default function HomePage() {
                       fontFamily: "var(--display)",
                       color: "var(--text)",
                       textShadow: "0 0 30px rgba(255,36,54,0.25)",
-                      textShadow: "0 0 30px rgba(255,36,54,0.25)",
-                    }}
+                      }}
                   >
                     Snehil Gautam
                   </h1>
@@ -161,16 +148,6 @@ export default function HomePage() {
                     >
                       [+] resume
                     </button>
-                    <Link
-                      href="/work"
-                      className="px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:bg-[var(--red-hover-tint)] no-underline"
-                      style={{
-                        borderColor: "var(--border2)",
-                        color: "var(--text)",
-                      }}
-                    >
-                      [~] work
-                    </Link>
                   </div>
                 </div>
                 {/* Bio — greentext style */}
@@ -187,7 +164,7 @@ export default function HomePage() {
                     className="text-[11px] tracking-[3px] uppercase mb-[12px]"
                     style={{ color: "var(--red)" }}
                   >
-                    // bio.greentext
+                    {"// bio.greentext"}
                   </p>
                   <p>&gt; Be me</p>
                   <p>&gt; AI &amp; Data Science student</p>
@@ -245,14 +222,8 @@ export default function HomePage() {
             entries.log
           </PanelHead>
           <PanelBody>
-            <p
-              className="text-[10px] tracking-[.04em] mb-[12px]"
-              style={{ color: "var(--text3)" }}
-            >
-              // <span style={{ color: "var(--amber)" }}>4 entries</span> ·
-              draft → publish pipeline
-            </p>
-            <RotatingJournal posts={POSTS} />
+            <JournalHeader count={posts.length} />
+            <RotatingJournal posts={posts} />
           </PanelBody>
         </Panel>
 

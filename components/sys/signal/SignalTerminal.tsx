@@ -53,21 +53,27 @@ interface Commit {
 export default function SignalTerminal() {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [loadingCommits, setLoadingCommits] = useState(true);
+  const [commitError, setCommitError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/sys/github")
       .then((r) => r.json())
       .then((payload) => {
         if (!payload.error && Array.isArray(payload.commits)) {
-          setCommits(
-            payload.commits.map((c: Commit) => ({
+          const filtered = payload.commits
+            .map((c: Commit) => ({
               ...c,
               date: new Date(c.date),
-            })),
-          );
+            }))
+            .filter((c) => c.repo === "x_zaevo-" || c.repo === "zaevotic")
+            .slice(0, 3);
+          setCommits(filtered);
         }
       })
-      .catch(() => {})
+      .catch((e) => {
+            console.error(e);
+            setCommitError('Failed to load commits');
+          })
       .finally(() => setLoadingCommits(false));
   }, []);
 
@@ -218,6 +224,10 @@ export default function SignalTerminal() {
                   </div>
                 );
               })
+            ) : commitError ? (
+              <div className="text-[11px] font-mono" style={{ color: "var(--red)" }}>
+                {commitError}
+              </div>
             ) : !loadingCommits ? (
               <div
                 className="text-[11px] font-mono"

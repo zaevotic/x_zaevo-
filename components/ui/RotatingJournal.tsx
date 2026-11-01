@@ -15,14 +15,15 @@ interface Props {
 }
 
 export default function RotatingJournal({ posts }: Props) {
-  const [items, setItems] = useState(posts);
+  const [items, setItems] = useState<JournalPost[]>(posts || []);
+  const [prevPosts, setPrevPosts] = useState(posts);
+
+  if (posts !== prevPosts) {
+    setPrevPosts(posts);
+    setItems(posts || []);
+  }
+
   const isHovered = useRef(false);
-
-  // When the component mounts or posts change, reset the array
-  useEffect(() => {
-    setItems(posts);
-  }, [posts]);
-
   const isVisible = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -143,7 +144,7 @@ export default function RotatingJournal({ posts }: Props) {
             className="text-[10px] tracking-[1px] uppercase"
             style={{ color: "var(--text3)", fontFamily: "var(--mono)" }}
           >
-            // coming soon
+            {"// coming soon"}
           </span>
         </div>
       )}

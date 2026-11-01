@@ -1,112 +1,263 @@
 "use client";
 
-import Link from "next/link";
-import { Cpu, FileCode, Terminal, Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Cpu,
+  FileCode,
+  Terminal,
+  Star,
+  Code2,
+  Boxes,
+  ChevronUp,
+  ChevronDown,
+  type LucideIcon,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 
-const PROJECTS = [
-  {
-    icon: Cpu,
-    name: "za0S",
-    desc: "Custom OS architecture with a 3-layer semantic filesystem model, xattr integration, and real x86 implementation planning.",
-    stack: ["Rust", "C", "systems"],
-    metaIcon: Star,
-    metaText: "research",
-    href: "/work",
-  },
-  {
-    icon: FileCode,
-    name: "svg-readme-gen",
-    desc: "Animated SVG GitHub profile that mimics fastfetch/neofetch layout with live GraphQL stats injection and GitHub Actions automation.",
-    stack: ["Python", "SVG", "tooling"],
-    metaText: "shipped",
-    href: "/work",
-  },
-  {
-    icon: Terminal,
-    name: "terminal-portfolio",
-    desc: "Self-contained terminal portfolio page. Unified filesystem panel, vim-style file viewer tabs, live keyboard panel, floating syslog.",
-    stack: ["TypeScript", "Tauri", "web"],
-    metaText: "oss",
-    href: "/work",
-  },
-];
+interface RepoProject {
+  name: string;
+  desc: string;
+  url: string;
+  stars: number;
+  primaryLanguage: string | null;
+  stack: string[];
+}
+
+function getProjectIcon(lang: string | null, idx: number): LucideIcon {
+  const l = (lang || "").toLowerCase();
+  if (l === "rust" || l === "c" || l === "c++" || l === "zig") return Cpu;
+  if (l === "shell" || l === "lua" || l === "nix") return Terminal;
+  if (l === "typescript" || l === "javascript") return Code2;
+  if (l === "python" || l === "go") return FileCode;
+  const fallbacks: LucideIcon[] = [Cpu, FileCode, Terminal, Code2, Boxes];
+  return fallbacks[idx % fallbacks.length];
+}
 
 export default function FeaturedProjectsPanel({
   delay = 0,
 }: {
   delay?: number;
 }) {
+  const [items, setItems] = useState<RepoProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isHovered = useRef(false);
+  const isVisible = useRef(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wheelCooldown = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/sys/github")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.repos) && data.repos.length > 0) {
+          setItems(data.repos);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible.current = entry.isIntersecting;
+    });
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const stepForward = () => {
+    setItems((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = [...prev];
+      const first = next.shift()!;
+      next.push(first);
+      return next;
+    });
+  };
+
+  const stepBackward = () => {
+    setItems((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = [...prev];
+      const last = next.pop()!;
+      next.unshift(last);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (items.length <= 3) return;
+
+    const interval = setInterval(() => {
+      if (isHovered.current || document.hidden || !isVisible.current) return;
+      stepForward();
+    }, 4200);
+
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  const displayedItems = items.slice(0, 3);
+
   return (
     <Panel delay={delay}>
-      <PanelHead meta="projects.lst">
+      <PanelHead
+        meta={
+          <div className="flex items-center gap-[6px]">
+            <span>
+              {items.length > 0 ? `3/${items.length} · ` : ""}projects.lst
+            </span>
+            {items.length > 3 && (
+              <span className="inline-flex items-center gap-[2px] ml-[2px]">
+                <button
+                  type="button"
+                  onClick={stepBackward}
+                  aria-label="Previous project"
+                  className="p-[2px] rounded-[2px] transition-colors cursor-pointer hover:text-[var(--red)]"
+                  style={{
+                    color: "var(--text3)",
+                    background: "none",
+                    border: "none",
+                  }}
+                >
+                  <ChevronUp size={11} />
+                </button>
+                <button
+                  type="button"
+                  onClick={stepForward}
+                  aria-label="Next project"
+                  className="p-[2px] rounded-[2px] transition-colors cursor-pointer hover:text-[var(--red)]"
+                  style={{
+                    color: "var(--text3)",
+                    background: "none",
+                    border: "none",
+                  }}
+                >
+                  <ChevronDown size={11} />
+                </button>
+              </span>
+            )}
+          </div>
+        }
+      >
         <Dagger /> ~/{" "}
         <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
           FEATURED_PROJECTS
         </b>
       </PanelHead>
-      <PanelBody className="flex flex-col gap-[10px]">
-        {PROJECTS.map((proj) => (
-          <Link
-            href={proj.href}
-            key={proj.name}
-            className="group flex gap-[16px] p-[14px] border transition-all cursor-pointer no-underline bg-[var(--bg)] border-[var(--border)] hover:bg-[var(--bg2)] hover:border-[var(--red-dim)]"
-          >
-            {/* Icon */}
-            <div
-              className="flex items-center justify-center w-[44px] h-[44px] border shrink-0 transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red-ember)]"
-              style={{
-                borderColor: "var(--border2)",
-                background: "var(--bg1)",
-                color: "var(--text2)",
-              }}
-            >
-              <proj.icon size={20} strokeWidth={1.5} />
-            </div>
-
-            {/* Info */}
-            <div className="flex flex-col flex-1">
-              <div className="flex justify-between items-start mb-[8px]">
-                <h3
-                  className="text-[13px] font-bold tracking-[0.5px] transition-colors group-hover:text-[var(--text)]"
-                  style={{ color: "var(--text2)", fontFamily: "var(--mono)" }}
-                >
-                  {proj.name}
-                </h3>
-                <div
-                  className="text-[10px] flex items-center gap-[4px] uppercase tracking-[1px] transition-colors group-hover:text-[var(--amber)]"
-                  style={{ color: "var(--text3)", fontFamily: "var(--mono)" }}
-                >
-                  {proj.metaIcon && (
-                    <proj.metaIcon size={10} strokeWidth={2.5} />
-                  )}
-                  {proj.metaText}
-                </div>
-              </div>
-              <p
-                className="text-[12px] leading-[1.6] mb-[12px] line-clamp-2"
-                style={{ color: "var(--text2)" }}
-              >
-                {proj.desc}
-              </p>
-              <div className="flex flex-wrap gap-[8px]">
-                {proj.stack.map((s) => (
-                  <span
-                    key={s}
-                    className="text-[9px] px-[8px] py-[3px] border tracking-[0.5px] uppercase transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red)]"
-                    style={{
-                      borderColor: "var(--border2)",
-                      color: "var(--text3)",
-                      fontFamily: "var(--mono)",
-                    }}
+      <PanelBody>
+        <div
+          ref={containerRef}
+          className="flex flex-col gap-[10px] overflow-hidden"
+          onMouseEnter={() => {
+            isHovered.current = true;
+          }}
+          onMouseLeave={() => {
+            isHovered.current = false;
+          }}
+          onWheel={(e) => {
+            if (items.length <= 3 || wheelCooldown.current) return;
+            if (Math.abs(e.deltaY) < 10) return;
+            e.preventDefault();
+            wheelCooldown.current = true;
+            if (e.deltaY > 0) {
+              stepForward();
+            } else {
+              stepBackward();
+            }
+            setTimeout(() => {
+              wheelCooldown.current = false;
+            }, 320);
+          }}
+        >
+          {loading ? (
+            <p className="text-[12px]" style={{ color: "var(--text3)" }}>
+              Fetching top repositories from GitHub…
+            </p>
+          ) : displayedItems.length === 0 ? (
+            <p className="text-[12px]" style={{ color: "var(--text3)" }}>
+              No public repositories found.
+            </p>
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              {displayedItems.map((proj, idx) => {
+                const Icon = getProjectIcon(proj.primaryLanguage, idx);
+                return (
+                  <motion.a
+                    layout
+                    key={proj.name}
+                    href={proj.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -12, filter: "blur(4px)", scale: 0.97 }}
+                    transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                    className="group flex gap-[16px] p-[14px] border transition-colors cursor-pointer no-underline bg-[var(--bg)] border-[var(--border)] hover:bg-[var(--bg2)] hover:border-[var(--red-dim)] shrink-0"
                   >
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </Link>
-        ))}
+                    {/* Icon */}
+                    <div
+                      className="flex items-center justify-center w-[44px] h-[44px] border shrink-0 transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red-ember)]"
+                      style={{
+                        borderColor: "var(--border2)",
+                        background: "var(--bg1)",
+                        color: "var(--text2)",
+                      }}
+                    >
+                      <Icon size={20} strokeWidth={1.5} />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-[8px] mb-[6px]">
+                        <h3
+                          className="text-[13px] font-bold tracking-[0.5px] truncate transition-colors group-hover:text-[var(--text)]"
+                          style={{
+                            color: "var(--text2)",
+                            fontFamily: "var(--mono)",
+                          }}
+                        >
+                          {proj.name}
+                        </h3>
+                        <div
+                          className="text-[10px] flex items-center gap-[4px] uppercase tracking-[1px] shrink-0 transition-colors group-hover:text-[var(--amber)]"
+                          style={{
+                            color: "var(--text3)",
+                            fontFamily: "var(--mono)",
+                          }}
+                        >
+                          <Star size={10} strokeWidth={2.5} />
+                          {proj.stars}
+                        </div>
+                      </div>
+                      <p
+                        className="text-[12px] font-sans leading-[1.55] mb-[10px] line-clamp-2"
+                        style={{ color: "var(--text2)" }}
+                      >
+                        {proj.desc}
+                      </p>
+                      <div className="flex flex-wrap gap-[8px]">
+                        {proj.stack.map((s) => (
+                          <span
+                            key={s}
+                            className="text-[9px] px-[8px] py-[2px] border tracking-[0.5px] uppercase transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red)]"
+                            style={{
+                              borderColor: "var(--border2)",
+                              color: "var(--text3)",
+                              fontFamily: "var(--mono)",
+                            }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.a>
+                );
+              })}
+            </AnimatePresence>
+          )}
+        </div>
       </PanelBody>
     </Panel>
   );

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { visits } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 /** GET – return the current visitor count */
 export async function GET() {
@@ -12,7 +12,8 @@ export async function GET() {
 
 /** POST – manually bump the counter (optional) */
 export async function POST() {
-  await db.update(visits).set({ count: db.sql<number>`${visits.count} + 1` }).where(eq(visits.id, 1));
-  const { count } = await db.select().from(visits).where(eq(visits.id, 1)).get();
+  await db.update(visits).set({ count: sql<number>`${visits.count} + 1` }).where(eq(visits.id, 1));
+  const row = await db.select().from(visits).where(eq(visits.id, 1)).get();
+  const count = row?.count ?? 0;
   return NextResponse.json({ count });
 }

@@ -43,7 +43,7 @@ export default function SystemLogPanel({ delay = 0 }: { delay?: number }) {
               message: c.message,
               date: new Date(c.date),
             }))
-            .sort((a, b) => b.date.getTime() - a.date.getTime());
+            .sort((a: CommitLog, b: CommitLog) => b.date.getTime() - a.date.getTime());
 
           const repoMap: Record<string, any[]> = {};
           const final: any[] = [];

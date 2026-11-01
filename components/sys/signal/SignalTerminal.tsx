@@ -65,7 +65,7 @@ export default function SignalTerminal() {
               ...c,
               date: new Date(c.date),
             }))
-            .filter((c) => c.repo === "x_zaevo-" || c.repo === "zaevotic")
+            .filter((c: Commit) => c.repo === "x_zaevo-" || c.repo === "zaevotic")
             .slice(0, 3);
           setCommits(filtered);
         }

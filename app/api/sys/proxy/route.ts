@@ -23,7 +23,8 @@ export async function GET(request: Request) {
     .where(eq(visits.id, 1));
 
   // Read the new count.
-  const { count } = await db.select().from(visits).where(eq(visits.id, 1)).get();
+  const row = await db.select().from(visits).where(eq(visits.id, 1)).get();
+  const count = row?.count ?? 0;
   // Return plain Response (NextResponse.next() not allowed in App Router)
   return new Response(null, {
     status: 200,

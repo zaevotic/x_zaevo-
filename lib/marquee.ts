@@ -11,7 +11,7 @@ export const MARQUEE_DB: MarqueeStatement[] = [
     text: "> this page has been rebuilt more times than I can count",
     category: "meta",
   },
-  { text: "> you're viewing commit a3f9c12", category: "meta" },
+  // { text: "> you're viewing commit a3f9c12", category: "meta" },
   { text: "> yes, this greentext is rotating in real time", category: "meta" },
   { text: "> compiling personality... done", category: "meta" },
   { text: "> if you're reading this, hi", category: "meta" },

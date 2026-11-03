@@ -105,7 +105,7 @@ export default function FeaturedProjectsPanel({
         meta={
           <div className="flex items-center gap-[6px]">
             <span>
-              {items.length > 0 ? `3/${items.length} · ` : ""}projects.lst
+              {`${Math.min(items.length, 3)} / ${items.length} · projects.lst`}
             </span>
             {items.length > 3 && (
               <span className="inline-flex items-center gap-[2px] ml-[2px]">

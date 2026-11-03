@@ -21,7 +21,10 @@ function getDate() {
 export default function StatusBar() {
   const pathname = usePathname();
   const [visitCount, setVisitCount] = useState<number>(0);
-  const [commitHash, setCommitHash] = useState<string>("-");
+  const [commitHash, setCommitHash] = useState<string>(() => {
+    const baked = process.env.NEXT_PUBLIC_COMMIT_HASH;
+    return baked && baked !== "-" ? baked.slice(0, 7) : "-";
+  });
   const [sessionSec, setSessionSec] = useState<number>(0);
 
   // Fetch visit count from proxy on mount
@@ -38,8 +41,12 @@ export default function StatusBar() {
   useEffect(() => {
     fetch("/api/sys/commit")
       .then((r) => r.json())
-      .then((data) => setCommitHash(data.hash?.slice(0, 7) ?? "-"))
-      .catch(() => setCommitHash("-"));
+      .then((data) => {
+        if (data?.hash && data.hash !== "-") {
+          setCommitHash(data.hash.slice(0, 7));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Session timer – counts mm:ss since component mount

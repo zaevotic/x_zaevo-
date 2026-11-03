@@ -5,16 +5,8 @@ import SystemLogPanel from "@/components/ui/SystemLogPanel";
 import FeaturedProjectsPanel from "@/components/ui/FeaturedProjectsPanel";
 import GithubHeatmap from "@/components/sys/log/github";
 import HeroMarquee from "@/components/ui/HeroMarquee";
-import dynamic from "next/dynamic";
-const RotatingJournal = dynamic(() => import("@/components/ui/RotatingJournal"), {
-  ssr: false,
-  // simple placeholder while the client‑only component loads
-  loading: () => (
-    <p className="text-[12px]" style={{ color: "var(--text3)" }}>Loading journal…</p>
-  ),
-});
+import RotatingJournal from "@/components/ui/RotatingJournal";
 import WakaTimePanel from "@/components/sys/log/wakatime_panel";
-import JournalHeader from "@/components/ui/JournalHeader";
 import { useEffect, useState } from "react";
 
 
@@ -216,16 +208,7 @@ export default function HomePage() {
 
       {/* RIGHT SIDEBAR: JOURNAL */}
       <div className="flex flex-col gap-[10px]">
-        <Panel delay={0.6}>
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>JOURNAL</b>{" "}
-            entries.log
-          </PanelHead>
-          <PanelBody>
-            <JournalHeader count={posts.length} />
-            <RotatingJournal posts={posts} />
-          </PanelBody>
-        </Panel>
+        <RotatingJournal delay={0.6} posts={posts} />
 
         {/* Wakatime */}
         <WakaTimePanel delay={0.7} />

@@ -5,9 +5,8 @@ import SystemLogPanel from "@/components/ui/SystemLogPanel";
 import FeaturedProjectsPanel from "@/components/ui/FeaturedProjectsPanel";
 import GithubHeatmap from "@/components/sys/log/github";
 import HeroMarquee from "@/components/ui/HeroMarquee";
-import RotatingJournal from "@/components/ui/RotatingJournal";
+import LeaderboardPanel from "@/components/sys/log/leaderboard";
 import WakaTimePanel from "@/components/sys/log/wakatime_panel";
-import { useEffect, useState } from "react";
 
 
 // Posts will be fetched from the API
@@ -36,21 +35,6 @@ const TECH_STACK = [
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  // State for journal posts fetched from API
-  type JournalPost = {
-    date: string;
-    tag: string;
-    title: string;
-    excerpt: string;
-  };
-
-  const [posts, setPosts] = useState<JournalPost[]>([]);
-
-  useEffect(() => {
-    fetch("/api/usr/journal")
-      .then((res) => res.json())
-      .then(setPosts);
-  }, []);
   return (
     <div className="grid gap-[10px] grid-cols-1 md:grid-cols-[2.2fr_1fr] xl:grid-cols-[3.2fr_1fr]">
       {/* MAIN LEFT COLUMN */}
@@ -59,7 +43,7 @@ export default function HomePage() {
         <div className="grid gap-[10px] grid-cols-1 xl:grid-cols-[1fr_1.6fr]">
           {/* Left Column: Technology Stack */}
           <Panel style={{ flex: 1 }} delay={0.1}>
-            <PanelHead>
+            <PanelHead meta="stack.cfg">
               <Dagger /> ~/{" "}
               <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
                 TECHNOLOGY_STACK
@@ -95,10 +79,10 @@ export default function HomePage() {
 
           {/* Middle Column: Hero panel */}
           <Panel delay={0.2} className="flex flex-col h-full">
-            <PanelHead meta="fastfetch">
+            <PanelHead meta="fastfetch · hero.md">
               <Dagger /> ~/{" "}
               <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
-                hero.md
+                HERO
               </b>
             </PanelHead>
             <PanelBody className="flex flex-col">
@@ -190,9 +174,11 @@ export default function HomePage() {
         <div className="grid gap-[10px] grid-cols-1 xl:grid-cols-[1.6fr_1fr]">
           <div className="flex flex-col gap-[10px]">
             <Panel delay={0.3}>
-              <PanelHead>
-                <Dagger /> <b style={{ color: "var(--text)" }}>GH</b>{" "}
-                github_heatmap.svg
+              <PanelHead meta="github_heatmap.svg">
+                <Dagger /> ~/{" "}
+                <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+                  GITHUB
+                </b>
               </PanelHead>
               <PanelBody>
                 <GithubHeatmap />
@@ -206,9 +192,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR: JOURNAL */}
+      {/* RIGHT SIDEBAR: LEADERBOARD & WAKATIME */}
       <div className="flex flex-col gap-[10px]">
-        <RotatingJournal delay={0.6} posts={posts} />
+        <LeaderboardPanel delay={0.6} />
 
         {/* Wakatime */}
         <WakaTimePanel delay={0.7} />

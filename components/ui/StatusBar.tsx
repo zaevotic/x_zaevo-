@@ -8,6 +8,7 @@ const WS_MAP: Record<string, string> = {
   "/journal": "2:journal",
   "/term": "3:term",
   "/signal": "4:signal",
+  "/admin": "5:admin",
 };
 
 function getDate() {

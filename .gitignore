@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 !public/pubkey.pem
+content
 
 # debug
 npm-debug.log*
@@ -47,4 +48,7 @@ PORTFOLIO_UPGRADE_GUIDE.md
 current_context.md
 AGENTS.md
 CLAUDE.md
+MIGRATION.md
+INSPIRATION.md
 react_bits_refs
+.clerk/

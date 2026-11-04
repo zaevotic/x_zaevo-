@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 
 interface SpotifyData {
   isPlaying: boolean;
@@ -14,8 +16,17 @@ interface SpotifyData {
   error?: string;
 }
 
-export default function SpotifyPanel() {
+interface SpotifyPanelProps {
+  delay?: number;
+  className?: string;
+}
+
+export default function SpotifyPanel({
+  delay = 0.45,
+  className = "",
+}: SpotifyPanelProps) {
   const [track, setTrack] = useState<SpotifyData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -35,13 +46,13 @@ export default function SpotifyPanel() {
           if (endTimer.current) clearTimeout(endTimer.current);
 
           // Schedule a fresh fetch the moment this track should end
-          // +1500ms buffer gives Spotify's API time to register the new track
           if (data.isPlaying && data.progress && data.duration) {
             const remaining = data.duration - data.progress;
             endTimer.current = setTimeout(load, remaining + 1500);
           }
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setLoading(false));
     };
 
     load();
@@ -71,116 +82,279 @@ export default function SpotifyPanel() {
   const fmt = (s: number) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
+  const metaText = loading
+    ? "syncing… · spotify.rc"
+    : track?.isPlaying
+      ? "live · spotify.rc"
+      : track?.title
+        ? "recent · spotify.rc"
+        : "idle · spotify.rc";
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Album row — vinyl disc + play button side by side */}
-      <div className="flex items-center gap-[16px] mb-[14px]">
-        {/* Vinyl disc — album art masked behind spinning grooves */}
-        <div
-          className="w-full max-w-[200px] aspect-square rounded-[3px] relative border shrink-0"
-          style={{ background: "var(--bg)", borderColor: "var(--border2)" }}
-        >
-          {/* Spinning disc — clips everything inside to a circle */}
-          <div
-            className="absolute rounded-full overflow-hidden animate-[spin_8s_linear_infinite]"
-            style={{ inset: 8 }}
-          >
-            {/* Album art base — slightly dimmed so grooves read on top */}
-            {track?.albumArt && (
-              <img
-                src={track.albumArt}
-                alt={album}
-                className="absolute inset-0 w-full h-full object-cover opacity-75"
-              />
+    <Panel delay={delay} className={className}>
+      <PanelHead
+        meta={
+          <div className="flex items-center gap-[6px]">
+            {!loading && track?.isPlaying && (
+              <span
+                className="inline-flex items-end gap-[1.5px] h-[9px] mr-[2px]"
+                title="audio stream active"
+              >
+                <span className="w-[2px] h-[9px] bg-[var(--red)] animate-pulse" />
+                <span
+                  className="w-[2px] h-[5px] bg-[var(--red)] animate-pulse"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="w-[2px] h-[8px] bg-[var(--red)] animate-pulse"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </span>
             )}
-
-            {/* Vinyl groove conic-gradient — semi-transparent over the art */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `conic-gradient(
-                  rgba(0,0,0,0.35) 0deg,   rgba(255,255,255,0.06) 18deg,
-                  rgba(0,0,0,0.35) 36deg,  rgba(0,0,0,0.4)        72deg,
-                  rgba(255,255,255,0.06) 108deg, rgba(0,0,0,0.35) 144deg,
-                  rgba(0,0,0,0.4)  180deg, rgba(255,255,255,0.06) 216deg,
-                  rgba(0,0,0,0.35) 252deg, rgba(255,255,255,0.06) 288deg,
-                  rgba(0,0,0,0.35) 324deg, rgba(0,0,0,0.4)        360deg
-                )`,
-              }}
-            />
-
-            {/* Center spindle hole */}
-            <div
-              className="absolute rounded-full border-[2px]"
-              style={{
-                width: 22,
-                height: 22,
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                background: "var(--bg1)",
-                borderColor: "var(--red-dim)",
-                zIndex: 10,
-              }}
-            />
+            <span>{metaText}</span>
           </div>
+        }
+      >
+        <Dagger /> ~/{" "}
+        <b style={{ color: "var(--text)", letterSpacing: "1px" }}>SPOTIFY</b>
+      </PanelHead>
+      <PanelBody>
+        <div className="flex flex-col h-full overflow-hidden">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="spotify-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, filter: "blur(4px)" }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col h-full"
+              >
+                {/* Album row skeleton */}
+                <div className="flex items-center gap-[16px] mb-[14px]">
+                  <div
+                    className="w-[120px] h-[120px] rounded-[3px] relative border shrink-0 opacity-40 animate-pulse flex items-center justify-center"
+                    style={{
+                      background: "var(--bg)",
+                      borderColor: "var(--border2)",
+                    }}
+                  >
+                    <div
+                      className="rounded-full border border-dashed border-[var(--border)] opacity-60"
+                      style={{ width: "70%", height: "70%" }}
+                    />
+                    <div
+                      className="absolute rounded-full border-[2px]"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        background: "var(--bg1)",
+                        borderColor: "var(--border2)",
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-[8px] opacity-40 animate-pulse">
+                    <div
+                      className="h-[34px] w-[110px] rounded-[2px]"
+                      style={{ background: "var(--border2)" }}
+                    />
+                  </div>
+                </div>
 
-          {/* Static gloss reflection — sits above the spinning disc, doesn't rotate */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              inset: 8,
-              borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 48%, rgba(0,0,0,0.12) 100%)",
-              zIndex: 20,
-            }}
-          />
+                {/* Title and artist skeleton */}
+                <div className="flex flex-col gap-[6px] mb-[12px] opacity-40 animate-pulse">
+                  <div
+                    className="h-[14px] w-[60%] rounded-[2px]"
+                    style={{ background: "var(--border2)" }}
+                  />
+                  <div
+                    className="h-[11px] w-[40%] rounded-[2px]"
+                    style={{ background: "var(--border2)" }}
+                  />
+                </div>
+
+                {/* Progress bar skeleton */}
+                <div
+                  className="h-[3px] rounded-[2px] mb-[6px] relative opacity-40"
+                  style={{ background: "var(--border)" }}
+                />
+                <div className="flex justify-between text-[10px] mb-[16px] opacity-40">
+                  <div
+                    className="h-[10px] w-[24px] rounded-[2px]"
+                    style={{ background: "var(--border2)" }}
+                  />
+                  <div
+                    className="h-[10px] w-[24px] rounded-[2px]"
+                    style={{ background: "var(--border2)" }}
+                  />
+                </div>
+              </motion.div>
+            ) : !track?.title ? (
+              <motion.div
+                key="spotify-idle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center py-[28px] text-[11px] uppercase tracking-[1px]"
+                style={{ color: "var(--text3)", fontFamily: "var(--mono)" }}
+              >
+                {"// spotify idle · no stream"}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="spotify-loaded"
+                initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-col h-full"
+              >
+                {/* Album row — vinyl disc + play button side by side */}
+                <div className="flex items-center gap-[16px] mb-[14px]">
+                  {/* Vinyl disc — album art masked behind spinning grooves */}
+                  <div
+                    className="w-[120px] h-[120px] rounded-[3px] relative border shrink-0"
+                    style={{
+                      background: "var(--bg)",
+                      borderColor: "var(--border2)",
+                    }}
+                  >
+                    {/* Spinning disc — clips everything inside to a circle */}
+                    <div
+                      className="absolute rounded-full overflow-hidden animate-[spin_8s_linear_infinite]"
+                      style={{
+                        inset: 6,
+                        animationPlayState: track.isPlaying
+                          ? "running"
+                          : "paused",
+                      }}
+                    >
+                      {/* Album art base — slightly dimmed so grooves read on top */}
+                      {track.albumArt && (
+                        <motion.img
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.75 }}
+                          transition={{ duration: 0.4 }}
+                          src={track.albumArt}
+                          alt={album}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      )}
+
+                      {/* Vinyl groove conic-gradient — semi-transparent over the art */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: `conic-gradient(
+                            rgba(0,0,0,0.35) 0deg,   rgba(255,255,255,0.06) 18deg,
+                            rgba(0,0,0,0.35) 36deg,  rgba(0,0,0,0.4)        72deg,
+                            rgba(255,255,255,0.06) 108deg, rgba(0,0,0,0.35) 144deg,
+                            rgba(0,0,0,0.4)  180deg, rgba(255,255,255,0.06) 216deg,
+                            rgba(0,0,0,0.35) 252deg, rgba(255,255,255,0.06) 288deg,
+                            rgba(0,0,0,0.35) 324deg, rgba(0,0,0,0.4)        360deg
+                          )`,
+                        }}
+                      />
+
+                      {/* Center spindle hole */}
+                      <div
+                        className="absolute rounded-full border-[2px]"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          background: "var(--bg1)",
+                          borderColor: "var(--red-dim)",
+                          zIndex: 10,
+                        }}
+                      />
+                    </div>
+
+                    {/* Static gloss reflection — sits above the spinning disc, doesn't rotate */}
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        inset: 6,
+                        borderRadius: "50%",
+                        background:
+                          "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 48%, rgba(0,0,0,0.12) 100%)",
+                        zIndex: 20,
+                      }}
+                    />
+                  </div>
+
+                  {/* Play on Spotify — sits to the right of the vinyl */}
+                  {track.url && (
+                    <motion.a
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      href={track.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-[8px] px-[16px] py-[10px] text-[11px] tracking-[1.5px] uppercase font-bold cursor-pointer transition-opacity no-underline hover:opacity-80"
+                      style={{
+                        background: "var(--red)",
+                        color: "var(--bg)",
+                        fontFamily: "var(--mono)",
+                      }}
+                    >
+                      <span style={{ fontSize: "14px", lineHeight: 1 }}>
+                        ▶
+                      </span>
+                      play song
+                    </motion.a>
+                  )}
+                </div>
+
+                <p
+                  className="text-[13px] mb-[3px] font-medium truncate"
+                  style={{ color: "var(--text)" }}
+                  title={title}
+                >
+                  {title}
+                </p>
+                <p
+                  className="text-[11px] mb-[12px] truncate"
+                  style={{ color: "var(--text3)" }}
+                  title={`${artist} · ${album}`}
+                >
+                  {artist} · {album}
+                </p>
+
+                {/* Progress bar */}
+                <div
+                  className="h-[3px] rounded-[2px] mb-[6px] relative overflow-hidden"
+                  style={{ background: "var(--border)" }}
+                >
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{
+                      duration: 0.85,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="h-full rounded-[2px]"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, var(--red-dim), var(--red-ember))",
+                    }}
+                  />
+                </div>
+
+                {/* Timestamps */}
+                <div
+                  className="flex justify-between text-[10px] mb-[16px]"
+                  style={{ color: "var(--text3)" }}
+                >
+                  <span>{fmt(elapsed)}</span>
+                  <span>{fmt(totalSec)}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Play on Spotify — sits to the right of the vinyl */}
-        {track?.url && (
-          <a
-            href={track.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-[10px] px-[20px] py-[12px] text-[12px] tracking-[1.5px] uppercase font-bold cursor-pointer transition-opacity no-underline hover:opacity-80"
-            style={{
-              background: "var(--red)",
-              color: "var(--bg)",
-              fontFamily: "var(--mono)",
-            }}
-          >
-            <span style={{ fontSize: "18px", lineHeight: 1 }}>▶</span>
-            play song
-          </a>
-        )}
-      </div>
-
-      <p className="text-[13px] mb-[3px]" style={{ color: "var(--text)" }}>
-        {title}
-      </p>
-      <p className="text-[11px] mb-[12px]" style={{ color: "var(--text3)" }}>
-        {artist} · {album}
-      </p>
-      {/* Progress bar */}
-      <div
-        className="h-[3px] rounded-[2px] mb-[6px] relative"
-        style={{ background: "var(--border)" }}
-      >
-        <div
-          className="h-full rounded-[2px] transition-all duration-1000 ease-linear"
-          style={{ width: `${progress}%`, background: "var(--red)" }}
-        />
-      </div>
-      {/* Timestamps */}
-      <div
-        className="flex justify-between text-[10px] mb-[16px]"
-        style={{ color: "var(--text3)" }}
-      >
-        <span>{fmt(elapsed)}</span>
-        <span>{fmt(totalSec)}</span>
-      </div>
-    </div>
+      </PanelBody>
+    </Panel>
   );
 }

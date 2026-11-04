@@ -19,11 +19,55 @@ function getBuildCommitHash(): string {
   }
 }
 
+function getBuildDeployTime(): string {
+  if (process.env.VERCEL_GIT_COMMIT_DATE) {
+    return process.env.VERCEL_GIT_COMMIT_DATE;
+  }
+  try {
+    const gitTime = execSync("git log -1 --format=%cI", { encoding: "utf-8" }).trim();
+    if (gitTime && gitTime !== "-") {
+      return gitTime;
+    }
+  } catch {
+    // ignore
+  }
+  return new Date().toISOString();
+}
+
+function getBuildRecentCommits(): string {
+  try {
+    const logRaw = execSync("git log --oneline --decorate -5", {
+      encoding: "utf-8",
+    }).trim();
+    if (logRaw) {
+      const lines = logRaw.split("\n").filter(Boolean);
+      const parsed = lines.map((line, idx) => {
+        const spaceIdx = line.indexOf(" ");
+        return {
+          hash: line.slice(0, spaceIdx).trim(),
+          msg: line.slice(spaceIdx + 1).trim(),
+          fresh: idx === 0,
+        };
+      });
+      if (parsed.length > 0) {
+        return JSON.stringify(parsed);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return "[]";
+}
+
 const buildCommitHash = getBuildCommitHash();
+const buildDeployTime = getBuildDeployTime();
+const buildRecentCommits = getBuildRecentCommits();
 
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_COMMIT_HASH: buildCommitHash,
+    NEXT_PUBLIC_DEPLOY_TIME: buildDeployTime,
+    NEXT_PUBLIC_GIT_COMMITS: buildRecentCommits,
   },
   /* config options here */
   allowedDevOrigins: ["10.166.174.16:3000", "10.166.174.16"],
@@ -32,6 +76,15 @@ const nextConfig: NextConfig = {
       {
         source: "/pubkey",
         destination: "/pubkey.pem",
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/home",
+        permanent: false,
       },
     ];
   },

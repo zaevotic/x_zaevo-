@@ -60,7 +60,7 @@ const GQL = `
             defaultBranchRef {
               target {
                 ... on Commit {
-                  history(first: 10) {
+                  history(first: 25) {
                     nodes {
                       messageHeadline
                       committedDate
@@ -88,7 +88,7 @@ export async function GET() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: GQL, variables: { login: username } }),
-      next: { revalidate: 3600 },
+      next: { revalidate: 120 },
     });
 
     if (!res.ok) throw new Error(`GQL returned ${res.status}`);
@@ -163,10 +163,20 @@ export async function GET() {
       };
     });
 
+    const seenCommitKeys = new Set<string>();
+    const uniqueCommits: Commit[] = [];
+    for (const c of commits) {
+      const key = `${c.repo}-${c.id}`;
+      if (seenCommitKeys.has(key)) continue;
+      seenCommitKeys.add(key);
+      uniqueCommits.push(c);
+      if (uniqueCommits.length === 35) break;
+    }
+
     return NextResponse.json({
       total: calendar.totalContributions,
       weeks: calendar.weeks,
-      commits: commits.slice(0, 4),
+      commits: uniqueCommits,
       repos,
     });
   } catch (err) {

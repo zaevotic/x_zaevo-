@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 import WakaBar from "@/components/sys/log/wakatime";
 
@@ -19,7 +20,8 @@ const FALLBACK: WakaLang[] = [
 ];
 
 export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
-  const [langs, setLangs] = useState<WakaLang[]>(FALLBACK);
+  const [langs, setLangs] = useState<WakaLang[]>([]);
+  const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState("syncing...");
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
           !Array.isArray(payload.languages) ||
           payload.languages.length === 0
         ) {
+          setLangs(FALLBACK);
           setMeta("cached / 30d");
           return;
         }
@@ -38,24 +41,76 @@ export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
         setMeta(`${payload.total || "0 hrs"} / ${payload.range || "30d"}`);
       })
       .catch(() => {
+        setLangs(FALLBACK);
         setMeta("cached / 30d");
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <Panel delay={delay}>
-      <PanelHead meta={meta}>
-        <Dagger /> <b style={{ color: "var(--text)" }}>WAKA</b> wakatime.log
+      <PanelHead meta={`${meta} · wakatime.log`}>
+        <Dagger /> ~/{" "}
+        <b style={{ color: "var(--text)", letterSpacing: "1px" }}>WAKA</b>
       </PanelHead>
       <PanelBody>
-        {langs.map((w, i) => (
-          <div
-            key={w.name}
-            style={{ marginBottom: i === langs.length - 1 ? 0 : undefined }}
-          >
-            <WakaBar lang={w.name} pct={w.pct} text={w.text} />
-          </div>
-        ))}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="waka-loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-[11px]"
+            >
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="opacity-40 animate-pulse">
+                  <div className="flex justify-between text-[11px] mb-[5px]">
+                    <div
+                      className="h-[10px] w-[30%] rounded-[2px]"
+                      style={{ background: "var(--border2)" }}
+                    />
+                    <div
+                      className="h-[10px] w-[15%] rounded-[2px]"
+                      style={{ background: "var(--border2)" }}
+                    />
+                  </div>
+                  <div
+                    className="h-[5px] border"
+                    style={{
+                      background: "var(--bg2)",
+                      borderColor: "var(--border)",
+                    }}
+                  />
+                </div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="waka-content"
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {langs.map((w, i) => (
+                <div
+                  key={w.name}
+                  style={{
+                    marginBottom: i === langs.length - 1 ? 0 : undefined,
+                  }}
+                >
+                  <WakaBar
+                    lang={w.name}
+                    pct={w.pct}
+                    text={w.text}
+                    delay={i * 0.08}
+                  />
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </PanelBody>
     </Panel>
   );

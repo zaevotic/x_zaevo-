@@ -1,19 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
-import { generateMarqueeSequence, MarqueeSequenceItem } from "@/lib/marquee";
+import { generateMarqueeSequence } from "@/lib/marquee";
+
+const emptySubscribe = () => () => {};
 
 export default function HeroMarquee() {
-  const [mounted, setMounted] = useState(false);
-  const [strip1, setStrip1] = useState<MarqueeSequenceItem[]>([]);
-  const [strip2, setStrip2] = useState<MarqueeSequenceItem[]>([]);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
-  useEffect(() => {
-    setStrip1(generateMarqueeSequence(10));
-    setStrip2(generateMarqueeSequence(10));
-    setMounted(true);
-  }, []);
+  const strip1 = useMemo(
+    () => (mounted ? generateMarqueeSequence(10) : []),
+    [mounted],
+  );
+  const strip2 = useMemo(
+    () => (mounted ? generateMarqueeSequence(10) : []),
+    [mounted],
+  );
 
   const content1 = useMemo(() => [...strip1, ...strip1].map((item, i) => (
     <span
@@ -45,7 +52,10 @@ export default function HeroMarquee() {
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, filter: "blur(4px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="flex flex-col gap-[6px] overflow-hidden w-full relative mt-[12px] pt-[8px] pb-[8px] border-t"
       style={{ borderColor: "var(--border2)" }}
     >
@@ -90,6 +100,6 @@ export default function HeroMarquee() {
           {content2}
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useCallback } from "react";
 
 const hexToRgb = (hex: string) => {
   const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
@@ -18,7 +18,22 @@ const hexToRgb = (hex: string) => {
     : null;
 };
 
-const interpolateColor = (start: any, end: any, factor: number) => {
+interface RGB {
+  r: number;
+  g: number;
+  b: number;
+}
+
+interface LetterItem {
+  char: string;
+  color: string;
+  targetColor: string;
+  colorProgress: number;
+  startRgb?: RGB | null;
+  targetRgb?: RGB | null;
+}
+
+const interpolateColor = (start: RGB, end: RGB, factor: number) => {
   const r = Math.round(start.r + (end.r - start.r) * factor);
   const g = Math.round(start.g + (end.g - start.g) * factor);
   const b = Math.round(start.b + (end.b - start.b) * factor);
@@ -42,15 +57,16 @@ export default function LetterGlitch({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const letters = useRef<any[]>([]);
+  const letters = useRef<LetterItem[]>([]);
   const grid = useRef({ columns: 0, rows: 0 });
   const context = useRef<CanvasRenderingContext2D | null>(null);
-  const lastGlitchTime = useRef(Date.now());
+  const lastGlitchTime = useRef(0);
   const activeLetters = useRef(new Set<number>());
   // New refs for visibility & throttling
   const containerRef = useRef<HTMLDivElement>(null);
   const isVisibleRef = useRef(true);
   const lastFrameRef = useRef(0);
+  const animateRef = useRef<() => void>(() => {});
 
   const lettersAndSymbols = useMemo(() => Array.from(characters), [characters]);
   const parsedColors = useMemo(
@@ -186,33 +202,39 @@ export default function LetterGlitch({
     }
   };
 
-  const animate = () => {
-    const now = Date.now();
+  const animate = useCallback(() => {
+    animateRef.current();
+  }, []);
 
-    // Pause if component is not visible (IntersectionObserver)
-    if (!isVisibleRef.current) {
-      animationRef.current = requestAnimationFrame(animate);
-      return;
-    }
+  useEffect(() => {
+    animateRef.current = () => {
+      const now = Date.now();
 
-    // Throttle to ~30 fps (33 ms per frame)
-    if (now - lastFrameRef.current < 33) {
-      animationRef.current = requestAnimationFrame(animate);
-      return;
-    }
-    lastFrameRef.current = now;
+      // Pause if component is not visible (IntersectionObserver)
+      if (!isVisibleRef.current) {
+        animationRef.current = requestAnimationFrame(() => animateRef.current());
+        return;
+      }
 
-    if (now - lastGlitchTime.current >= glitchSpeed) {
-      updateLetters();
-      lastGlitchTime.current = now;
-    }
+      // Throttle to ~30 fps (33 ms per frame)
+      if (now - lastFrameRef.current < 33) {
+        animationRef.current = requestAnimationFrame(() => animateRef.current());
+        return;
+      }
+      lastFrameRef.current = now;
 
-    if (smooth) {
-      handleSmoothTransitions();
-    }
+      if (now - lastGlitchTime.current >= glitchSpeed) {
+        updateLetters();
+        lastGlitchTime.current = now;
+      }
 
-    animationRef.current = requestAnimationFrame(animate);
-  };
+      if (smooth) {
+        handleSmoothTransitions();
+      }
+
+      animationRef.current = requestAnimationFrame(() => animateRef.current());
+    };
+  });
 
   // ── Visibility observer ────────────────────────────────────
   useEffect(() => {
@@ -227,7 +249,7 @@ export default function LetterGlitch({
     });
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [animate]);
 
   // ── Canvas setup & resize handling ───────────────────────────────
   useEffect(() => {

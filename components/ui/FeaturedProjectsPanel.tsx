@@ -170,31 +170,84 @@ export default function FeaturedProjectsPanel({
             }, 320);
           }}
         >
-          {loading ? (
-            <p className="text-[12px]" style={{ color: "var(--text3)" }}>
-              Fetching top repositories from GitHub…
-            </p>
-          ) : displayedItems.length === 0 ? (
-            <p className="text-[12px]" style={{ color: "var(--text3)" }}>
-              No public repositories found.
-            </p>
-          ) : (
-            <AnimatePresence mode="popLayout" initial={false}>
-              {displayedItems.map((proj, idx) => {
-                const Icon = getProjectIcon(proj.primaryLanguage, idx);
-                return (
-                  <motion.a
-                    layout
-                    key={proj.name}
-                    href={proj.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -12, filter: "blur(4px)", scale: 0.97 }}
-                    transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-                    className="group flex gap-[16px] p-[14px] border transition-colors cursor-pointer no-underline bg-[var(--bg)] border-[var(--border)] hover:bg-[var(--bg2)] hover:border-[var(--red-dim)] shrink-0"
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, filter: "blur(6px)" }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col gap-[10px]"
+              >
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex gap-[16px] p-[14px] border border-[var(--border)] bg-[var(--bg)] opacity-40 animate-pulse"
                   >
+                    <div
+                      className="w-[44px] h-[44px] border shrink-0"
+                      style={{
+                        borderColor: "var(--border2)",
+                        background: "var(--bg1)",
+                      }}
+                    />
+                    <div className="flex flex-col flex-1 min-w-0 justify-center gap-[8px]">
+                      <div
+                        className="h-[14px] w-[35%] rounded-[2px]"
+                        style={{ background: "var(--border2)" }}
+                      />
+                      <div
+                        className="h-[12px] w-[80%] rounded-[2px]"
+                        style={{ background: "var(--border2)" }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            ) : displayedItems.length === 0 ? (
+              <motion.p
+                key="empty-state"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-[12px]"
+                style={{ color: "var(--text3)" }}
+              >
+                No public repositories found.
+              </motion.p>
+            ) : (
+              <motion.div
+                key="loaded-projects"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-col gap-[10px]"
+              >
+                <AnimatePresence mode="popLayout">
+                  {displayedItems.map((proj, idx) => {
+                    const Icon = getProjectIcon(proj.primaryLanguage, idx);
+                    return (
+                      <motion.a
+                        layout
+                        key={proj.name}
+                        href={proj.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        exit={{
+                          opacity: 0,
+                          y: -14,
+                          filter: "blur(6px)",
+                          scale: 0.97,
+                        }}
+                        transition={{
+                          duration: 0.45,
+                          delay: idx * 0.08,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="group flex gap-[16px] p-[14px] border transition-colors cursor-pointer no-underline bg-[var(--bg)] border-[var(--border)] hover:bg-[var(--bg2)] hover:border-[var(--red-dim)] shrink-0"
+                      >
                     {/* Icon */}
                     <div
                       className="flex items-center justify-center w-[44px] h-[44px] border shrink-0 transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red-ember)]"
@@ -255,8 +308,10 @@ export default function FeaturedProjectsPanel({
                   </motion.a>
                 );
               })}
-            </AnimatePresence>
-          )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </PanelBody>
     </Panel>

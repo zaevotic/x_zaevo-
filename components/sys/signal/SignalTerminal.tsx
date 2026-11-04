@@ -86,7 +86,7 @@ export default function SignalTerminal() {
 
   return (
     <div
-      className="flex flex-col h-full relative overflow-hidden"
+      className="flex flex-col relative overflow-hidden"
       style={{ background: "var(--bg)" }}
     >
       {/* Decorative Matrix/Scanline Overlay */}
@@ -99,8 +99,8 @@ export default function SignalTerminal() {
         }}
       />
 
-      {/* Scrollable content wrapper */}
-      <div className="relative z-10 flex flex-col px-[16px] pt-[16px] pb-[8px] gap-[20px] h-full overflow-auto">
+      {/* Content wrapper */}
+      <div className="relative z-10 flex flex-col p-[16px] gap-[16px]">
         {/* ── BROADCAST (Morse) ───────────────────────── */}
         <div className="flex flex-col gap-[12px]">
           <div
@@ -224,7 +224,7 @@ export default function SignalTerminal() {
                 return (
                   <div
                     key={i}
-                    className="flex gap-[10px] text-[11px] font-mono leading-[1.6]"
+                    className="flex gap-[10px] text-[11px] font-mono leading-[1.6] min-w-0"
                   >
                     <span style={{ color: "var(--text3)", flexShrink: 0 }}>
                       {timeStr}
@@ -238,7 +238,7 @@ export default function SignalTerminal() {
                     </span>
                     <span
                       style={{ color: "var(--text2)" }}
-                      className="truncate"
+                      className="truncate min-w-0 flex-1"
                       title={c.message}
                     >
                       {c.message}
@@ -272,17 +272,17 @@ function MorseDisplay() {
   const [cursorVisible, setCursorVisible] = useState(true);
 
   useEffect(() => {
-    let currentPhrase = PHRASES[index];
-    let morseArray = currentPhrase
+    const currentPhrase = PHRASES[index];
+    const morseArray = currentPhrase
       .split("")
       .map((char) => MORSE_MAP[char.toUpperCase()] || char);
 
     let charIdx = 0;
 
-    setDisplayedText("");
-    setDisplayedMorse("");
-
     const startTimeout = setTimeout(() => {
+      setDisplayedText("");
+      setDisplayedMorse("");
+
       const interval = setInterval(() => {
         if (charIdx < currentPhrase.length) {
           setDisplayedText(currentPhrase.substring(0, charIdx + 1));

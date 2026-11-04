@@ -1,8 +1,7 @@
 import { drizzle } from "drizzle-orm/libsql";
 // ponytail: removed unused bun:sqlite import
-import { visits } from "./schema";
 
-/** SQLite DB (file visits.db) – created automatically on first run. */
+/** SQLite DB (file visits.db) – created automatically on first run. */
 // ponytail: using libsql (Turso) for Edge‑compatible SQLite
 import { createClient } from "@libsql/client";
 

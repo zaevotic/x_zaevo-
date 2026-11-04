@@ -25,8 +25,8 @@ export default function NotFound() {
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden p-[10px] w-full flex items-center justify-center">
         <Panel delay={0.1} className="w-full max-w-[560px]">
-          <PanelHead meta="errno: 2 (ENOENT)">
-            <Dagger /> /dev/null —{" "}
+          <PanelHead meta="errno: 2 (ENOENT) · /dev/null">
+            <Dagger /> ~/{" "}
             <b style={{ color: "var(--red)", letterSpacing: "1px" }}>
               FAULT_404
             </b>

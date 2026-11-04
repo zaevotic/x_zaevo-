@@ -2,12 +2,35 @@
 
 import { useState, useEffect } from "react";
 
+interface KeyDef {
+  code: string;
+  label: string;
+  kind?: string;
+}
+
+interface TTypeTelemetry {
+  nextCode: string | null;
+  lastKey?: string | null;
+  wpm?: number;
+  acc?: number;
+  active?: boolean;
+}
+
 export default function KeyboardPanel() {
   const [activeCodes, setActiveCodes] = useState<Set<string>>(new Set());
+  const [errorCodes, setErrorCodes] = useState<Set<string>>(new Set());
+  const [telemetry, setTelemetry] = useState<TTypeTelemetry>({
+    nextCode: null,
+    lastKey: null,
+    wpm: 0,
+    acc: 100,
+    active: false,
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       setActiveCodes((prev) => {
+        if (prev.has(e.code)) return prev;
         const next = new Set(prev);
         next.add(e.code);
         return next;
@@ -15,21 +38,74 @@ export default function KeyboardPanel() {
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       setActiveCodes((prev) => {
+        if (!prev.has(e.code)) return prev;
         const next = new Set(prev);
         next.delete(e.code);
         return next;
       });
     };
-    const handleBlur = () => setActiveCodes(new Set());
+    const handleBlur = () =>
+      setActiveCodes((prev) => (prev.size === 0 ? prev : new Set()));
+
+    const handleTTypeState = (e: Event) => {
+      const detail = (
+        e as CustomEvent<
+          TTypeTelemetry & { pulseCode?: string; isError?: boolean }
+        >
+      ).detail;
+      if (!detail) return;
+
+      setTelemetry((prev) => {
+        const nextCode =
+          detail.nextCode !== undefined ? detail.nextCode : prev.nextCode;
+        const lastKey =
+          detail.lastKey !== undefined ? detail.lastKey : prev.lastKey;
+        const wpm = detail.wpm !== undefined ? detail.wpm : prev.wpm;
+        const acc = detail.acc !== undefined ? detail.acc : prev.acc;
+        const active =
+          detail.active !== undefined ? detail.active : prev.active;
+
+        if (
+          prev.nextCode === nextCode &&
+          prev.lastKey === lastKey &&
+          prev.wpm === wpm &&
+          prev.acc === acc &&
+          prev.active === active
+        ) {
+          return prev;
+        }
+        return { nextCode, lastKey, wpm, acc, active };
+      });
+
+      if (detail.pulseCode && detail.isError) {
+        const code = detail.pulseCode;
+        setErrorCodes((prev) => {
+          if (prev.has(code)) return prev;
+          const next = new Set(prev);
+          next.add(code);
+          return next;
+        });
+        setTimeout(() => {
+          setErrorCodes((prev) => {
+            if (!prev.has(code)) return prev;
+            const next = new Set(prev);
+            next.delete(code);
+            return next;
+          });
+        }, 180);
+      }
+    };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
+    window.addEventListener("ttype-state", handleTTypeState);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("ttype-state", handleTTypeState);
     };
   }, []);
 
@@ -120,7 +196,7 @@ export default function KeyboardPanel() {
     ],
   ];
 
-  const getKeyClasses = (key: any) => {
+  const getKeyClasses = (key: KeyDef) => {
     let classes =
       "flex items-center justify-center border border-b-2 rounded-[3px] text-[9px] whitespace-nowrap select-none transition-all duration-75 ";
 
@@ -132,9 +208,15 @@ export default function KeyboardPanel() {
       classes += "h-[28px] min-w-[120px] px-[4px] ";
     else classes += "h-[28px] min-w-[28px] px-[4px] ";
 
-    if (activeCodes.has(key.code)) {
+    if (errorCodes.has(key.code)) {
+      classes +=
+        "bg-[var(--red-mute)] border-[var(--amber)] border-b-[var(--amber)] text-[var(--amber)] translate-y-[2px] border-b-0";
+    } else if (activeCodes.has(key.code)) {
       classes +=
         "bg-[var(--red-mute)] border-[var(--red-dim)] border-b-[var(--red-dim)] text-[var(--red)] translate-y-[2px] border-b-0";
+    } else if (telemetry.nextCode === key.code) {
+      classes +=
+        "bg-[var(--bg3)] border-[var(--red-dim)] border-b-[var(--border2)] text-[var(--text)]";
     } else {
       classes +=
         "bg-[var(--bg2)] border-[var(--border2)] border-b-[var(--border)] text-[var(--text3)]";
@@ -156,9 +238,23 @@ export default function KeyboardPanel() {
           </div>
         ))}
       </div>
-      <p className="text-[9px] tracking-[.1em] text-[var(--text3)] mt-[10px]">
-        LIVE INPUT FEED
-      </p>
+      <div className="flex items-center gap-[10px] text-[9px] tracking-[.1em] mt-[10px]" style={{ color: "var(--text3)" }}>
+        <span>LIVE INPUT FEED</span>
+        {telemetry.active && (
+          <>
+            <span>·</span>
+            <span style={{ color: "var(--red-ember)" }}>{telemetry.wpm ?? 0} WPM</span>
+            <span>·</span>
+            <span style={{ color: "var(--green)" }}>{telemetry.acc ?? 100}% ACC</span>
+          </>
+        )}
+        {telemetry.lastKey && (
+          <>
+            <span>·</span>
+            <span style={{ color: "var(--amber)" }}>KEY [{telemetry.lastKey}]</span>
+          </>
+        )}
+      </div>
     </div>
   );
 }

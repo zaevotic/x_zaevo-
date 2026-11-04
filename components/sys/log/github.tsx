@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 
 // Build a 52-week grid aligned to real calendar days
 function buildWeekGrid(cells: string[]) {
@@ -77,6 +78,7 @@ export default function GithubHeatmap() {
     commits: 0,
     streak: 0,
   });
+  const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
@@ -156,7 +158,8 @@ export default function GithubHeatmap() {
 
         setData({ cells, counts, commits: payload.total, streak: maxStreak });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const weeks = buildWeekGrid(data.cells);
@@ -166,7 +169,6 @@ export default function GithubHeatmap() {
     e: React.MouseEvent<SVGRectElement>,
     weekIdx: number,
     dayIdx: number,
-    level: string,
   ) => {
     const rect = (e.target as SVGRectElement).getBoundingClientRect();
     const index = weekIdx * 7 + dayIdx;
@@ -254,7 +256,7 @@ export default function GithubHeatmap() {
               outlineOffset: -1,
               cursor: "pointer",
             }}
-            onMouseEnter={(e) => handleCellEnter(e, wi, di, level)}
+            onMouseEnter={(e) => handleCellEnter(e, wi, di)}
             onMouseLeave={handleCellLeave}
             className="transition-opacity duration-150 hover:opacity-75"
           />,
@@ -265,16 +267,24 @@ export default function GithubHeatmap() {
   };
 
   return (
-    <div className="w-full relative mt-[8px]">
+    <motion.div
+      key={loading ? "heatmap-skeleton" : "heatmap-loaded"}
+      initial={{ opacity: 0.35, filter: "blur(4px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full relative mt-[8px]"
+    >
       <svg
-        className="block w-full h-auto"
+        className={`block w-full h-auto transition-opacity duration-300 ${
+          loading ? "opacity-35 animate-pulse" : "opacity-100"
+        }`}
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         preserveAspectRatio="xMidYMid meet"
       >
-          {renderDayLabels()}
-          {renderCells()}
-          <g>{renderMonthLabels()}</g>
-        </svg>
+        {renderDayLabels()}
+        {renderCells()}
+        <g>{renderMonthLabels()}</g>
+      </svg>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-[14px] gap-[12px]">
         {/* Legend */}
@@ -311,17 +321,27 @@ export default function GithubHeatmap() {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-[12px] text-[10px]">
-          <span style={{ color: "var(--text2)" }}>
-            <b style={{ color: "var(--red-ember)" }}>{data.commits}</b>{" "}
-            contributions this year
-          </span>
-          <span style={{ color: "var(--border2)" }}>·</span>
-          <span style={{ color: "var(--text2)" }}>
-            <b style={{ color: "var(--red-ember)" }}>{streakLabel}</b>{" "}
-            streak
-          </span>
-        </div>
+        {loading ? (
+          <div className="flex items-center gap-[12px] text-[10px] opacity-50 animate-pulse">
+            <span style={{ color: "var(--text3)" }}>syncing contributions…</span>
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-[12px] text-[10px]"
+          >
+            <span style={{ color: "var(--text2)" }}>
+              <b style={{ color: "var(--red-ember)" }}>{data.commits}</b>{" "}
+              contributions this year
+            </span>
+            <span style={{ color: "var(--border2)" }}>·</span>
+            <span style={{ color: "var(--text2)" }}>
+              <b style={{ color: "var(--red-ember)" }}>{streakLabel}</b> streak
+            </span>
+          </motion.div>
+        )}
       </div>
 
       {/* Floating tooltip */}
@@ -348,6 +368,6 @@ export default function GithubHeatmap() {
           </span>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

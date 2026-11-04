@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 import { SiArchlinux } from "react-icons/si";
 import { MdHome } from "react-icons/md";
-import {
-  VscFolder,
-  VscFileCode,
-  VscMarkdown,
-  VscLock,
-  VscJson,
-  VscSettingsGear,
-  VscFile,
-} from "react-icons/vsc";
 import KeyboardPanel from "@/components/sys/signal/keyboard";
-import KeybindsPanel from "@/components/sys/signal/keybinds";
+import LeaderboardPanel from "@/components/sys/log/leaderboard";
+import TypingTerminal from "@/components/sys/dev/tty";
 import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,33 +20,77 @@ interface LogEntry {
 
 // ── Static content ────────────────────────────────────────────────────────────
 
+const DEFAULT_DEPLOY_DATE = "2026-11-03T14:48:59+05:30";
+
+function formatUptime(diffMs: number): string {
+  const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days === 0 && hours === 0) {
+    return `${minutes} ${minutes === 1 ? "min" : "mins"}, ${seconds} ${seconds === 1 ? "sec" : "secs"}`;
+  }
+
+  const parts: string[] = [];
+  if (days > 0) {
+    parts.push(`${days} ${days === 1 ? "day" : "days"}`);
+  }
+  if (hours > 0 || days > 0) {
+    parts.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);
+  }
+  parts.push(`${minutes} ${minutes === 1 ? "min" : "mins"}`);
+
+  return parts.join(", ");
+}
+
 const FASTFETCH_ROWS = [
   { k: "OS", v: "Arch Linux x86_64" },
   { k: "Host", v: "OMEN by HP Gaming Laptop 16-wf1xxx" },
-  { k: "Kernel", v: "Linux 7.1.2-zen3-1-zen" },
-  { k: "Uptime", v: "18 hours, 4 mins" },
-  { k: "Shell", v: "zsh 5.9.1" },
-  { k: "WM", v: "niri 26.04 (Wayland)" },
-  { k: "Terminal", v: "kitty 0.47.4" },
+  { k: "Kernel", v: "Linux Zen" },
+  { k: "Uptime", v: "0 mins, 0 secs" },
+  { k: "Shell", v: "zsh " },
+  { k: "WM", v: "niri (Wayland)" },
+  { k: "Terminal", v: "kitty" },
   { k: "CPU", v: "Intel(R) Core(TM) i7-14650HX (16+8) @ 5.20 GHz" },
   { k: "GPU", v: "NVIDIA GeForce RTX 4060 Max-Q / Mobile [Discrete]" },
-  { k: "Memory", v: "13.28 GiB / 15.31 GiB (87%)" },
-  { k: "Disk (/)", v: "648.99 GiB / 707.35 GiB (92%) - btrfs" },
+  { k: "Memory", v: "16 GB DDR5 @ 5600 MT/s (2x8 GB SODIMM)" },
+  { k: "Filesystem", v: "BTRFS" },
 ];
 
-const GIT_LOG = [
+interface GitCommitItem {
+  hash: string;
+  msg: string;
+  fresh: boolean;
+}
+
+const DEFAULT_GIT_LOG: GitCommitItem[] = [
   {
-    hash: "6545df1",
-    msg: "(HEAD -> main, origin/main, origin/HEAD) feat: populated the term page, implemented working keymap highlights",
+    hash: "9956bef",
+    msg: "(HEAD -> main, origin/main, origin/HEAD) feat: add journal scroll controls, live wakatime share, and commit hash tracking",
     fresh: true,
   },
   {
-    hash: "03c54a7",
-    msg: "feat: implement tiling wm interface, core workspaces, and letterglitch canvas with ui/ux animations",
+    hash: "33fed8e",
+    msg: "fix: whitelisted pubkey.pem (I forgor)",
     fresh: false,
   },
-  { hash: "716a330", msg: "feat: initialised next.js", fresh: false },
-  { hash: "dde95e7", msg: "Initial commit", fresh: false },
+  {
+    hash: "aacc49f",
+    msg: "refactor: convert journal to standalone workspace, fix wakatime api and mobile resume zoom, and wire pubkey",
+    fresh: false,
+  },
+  {
+    hash: "c13f663",
+    msg: "style: update site metadata description and title for link previews",
+    fresh: false,
+  },
+  {
+    hash: "13316fe",
+    msg: "fix: resolve strict typescript errors in drizzle queries and log callbacks for production build",
+    fresh: false,
+  },
 ];
 
 const JOURNAL_LOGS: LogEntry[] = [
@@ -64,99 +100,11 @@ const JOURNAL_LOGS: LogEntry[] = [
   },
 ];
 
-const TREE_DATA = [
-  { p: "├──  ", n: "AGENTS.md" },
-  { p: "├──  ", n: "app", isDir: true },
-  { p: "│   ├──  ", n: "(workspaces)", isDir: true },
-  { p: "│   │   ├──  ", n: "contact", isDir: true },
-  { p: "│   │   │   └──  ", n: "page.tsx" },
-  { p: "│   │   ├──  ", n: "home", isDir: true },
-  { p: "│   │   │   └──  ", n: "page.tsx" },
-  { p: "│   │   ├──  ", n: "journal", isDir: true },
-  { p: "│   │   │   └──  ", n: "page.tsx" },
-  { p: "│   │   ├──  ", n: "layout.tsx" },
-  { p: "│   │   ├──  ", n: "signal", isDir: true },
-  { p: "│   │   │   └──  ", n: "page.tsx" },
-  { p: "│   │   ├──  ", n: "template.tsx" },
-  { p: "│   │   └──  ", n: "term", isDir: true },
-  { p: "│   │       └──  ", n: "page.tsx" },
-  { p: "│   ├──  ", n: "favicon.ico" },
-  { p: "│   ├──  ", n: "globals.css" },
-  { p: "│   ├──  ", n: "layout.tsx" },
-  { p: "│   └──  ", n: "page.tsx" },
-  { p: "├──  ", n: "bun.lock" },
-  { p: "├──  ", n: "CLAUDE.md" },
-  { p: "├──  ", n: "components", isDir: true },
-  { p: "│   ├──  ", n: "sys", isDir: true },
-  { p: "│   │   ├──  ", n: "dev", isDir: true },
-  { p: "│   │   │   ├──  ", n: "dsp.tsx" },
-  { p: "│   │   │   ├──  ", n: "kbd.tsx" },
-  { p: "│   │   │   └──  ", n: "tty.tsx" },
-  { p: "│   │   ├──  ", n: "log", isDir: true },
-  { p: "│   │   │   ├──  ", n: "github.tsx" },
-  { p: "│   │   │   ├──  ", n: "sysinfo.tsx" },
-  { p: "│   │   │   └──  ", n: "wakatime.tsx" },
-  { p: "│   │   └──  ", n: "signal", isDir: true },
-  { p: "│   │       ├──  ", n: "keybinds.tsx" },
-  { p: "│   │       ├──  ", n: "keyboard.tsx" },
-  { p: "│   │       └──  ", n: "spotify.tsx" },
-  { p: "│   └──  ", n: "ui", isDir: true },
-  { p: "│       ├──  ", n: "CustomCursor.tsx" },
-  { p: "│       ├──  ", n: "LetterGlitch.tsx" },
-  { p: "│       ├──  ", n: "MonitorBar.tsx" },
-  { p: "│       ├──  ", n: "Panel.tsx" },
-  { p: "│       └──  ", n: "StatusBar.tsx" },
-  { p: "├──  ", n: "config", isDir: true },
-  { p: "├──  ", n: "eslint.config.mjs" },
-  { p: "├──  ", n: "LICENSE" },
-  { p: "├──  ", n: "next-env.d.ts" },
-  { p: "├──  ", n: "next.config.ts" },
-  { p: "├──  ", n: "package.json" },
-  { p: "├──  ", n: "PORTFOLIO_UPGRADE_GUIDE.md" },
-  { p: "├──  ", n: "postcss.config.mjs" },
-  { p: "├──  ", n: "public", isDir: true },
-  { p: "│   ├──  ", n: "file.svg" },
-  { p: "│   ├──  ", n: "globe.svg" },
-  { p: "│   ├──  ", n: "journals", isDir: true },
-  { p: "│   ├──  ", n: "next.svg" },
-  { p: "│   ├──  ", n: "relics", isDir: true },
-  { p: "│   ├──  ", n: "vercel.svg" },
-  { p: "│   └──  ", n: "window.svg" },
-  { p: "├──  ", n: "react_bits_refs", isDir: true },
-  { p: "│   ├──  ", n: "border_glow.md" },
-  { p: "│   ├──  ", n: "letter_glitch.md" },
-  { p: "│   └──  ", n: "magic_bento.md" },
-  { p: "├──  ", n: "README-next.md" },
-  { p: "├──  ", n: "README.md" },
-  { p: "└──  ", n: "tsconfig.json" },
-];
-
 const LEVEL_COLOR: Record<LogLevel, string> = {
   ok: "var(--green)",
   inf: "var(--amber)",
   err: "var(--red)",
 };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getTreeIcon(name: string, isDir?: boolean) {
-  if (isDir) return { Icon: VscFolder, color: "var(--amber)" };
-  if (name.endsWith(".md")) return { Icon: VscMarkdown, color: "var(--amber)" };
-  if (name.endsWith(".tsx") || name.endsWith(".ts"))
-    return { Icon: VscFileCode, color: "var(--text2)" };
-  if (name.endsWith(".json")) return { Icon: VscJson, color: "var(--amber)" };
-  if (name.includes("config") || name.startsWith(".git"))
-    return { Icon: VscSettingsGear, color: "var(--red)" };
-  if (name.endsWith(".lock")) return { Icon: VscLock, color: "var(--text2)" };
-  if (name.endsWith(".css"))
-    return { Icon: VscFileCode, color: "var(--text2)" };
-  return { Icon: VscFile, color: "var(--text2)" };
-}
-
-function bar(pct: number, len = 20) {
-  const filled = Math.round((pct / 100) * len);
-  return "█".repeat(filled) + "░".repeat(len - filled);
-}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -287,81 +235,58 @@ function MatrixCanvas() {
   );
 }
 
-/** Pulsing sysinfo panel */
-function SysInfoPanel() {
-  const [metrics, setMetrics] = useState({
-    cpu: 23,
-    mem: 46,
-    gpu: 8,
-    disk: 30,
-    temp: 51,
-  });
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setMetrics({
-        cpu: 15 + Math.floor(Math.random() * 45),
-        mem: 43 + Math.floor(Math.random() * 8),
-        gpu: 5 + Math.floor(Math.random() * 20),
-        disk: 30,
-        temp: 48 + Math.floor(Math.random() * 12),
-      });
-    }, 2000);
-    return () => clearInterval(id);
-  }, []);
-
-  const rows = [
-    { label: "cpu", val: `${metrics.cpu}%`, barVal: metrics.cpu },
-    { label: "mem", val: `${metrics.mem}%`, barVal: metrics.mem },
-    { label: "gpu", val: `${metrics.gpu}%`, barVal: metrics.gpu },
-    { label: "disk", val: `${metrics.disk}%`, barVal: metrics.disk },
-  ];
-
-  return (
-    <div
-      className="text-[10px] leading-[1.65]"
-      style={{
-        fontFamily: "var(--mono)",
-        color: "var(--text3)",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {rows.map(({ label, val, barVal }) => (
-        <div key={label}>
-          <span style={{ display: "inline-block", width: 40 }}>{label}</span>
-          <span style={{ color: "var(--amber)", marginRight: 8 }}>{val}</span>
-          <span style={{ color: "var(--text3)" }}>{bar(barVal)}</span>
-        </div>
-      ))}
-      <div>&nbsp;</div>
-      <div>
-        <span style={{ display: "inline-block", width: 40 }}>temp</span>
-        <span style={{ color: "var(--amber)" }}>{metrics.temp}°C</span>
-        <span style={{ color: "var(--text2)", marginLeft: 8 }}>
-          Ryzen 7 5800H
-        </span>
-      </div>
-      <div>
-        <span style={{ display: "inline-block", width: 40 }}>uptime</span>
-        <span style={{ color: "var(--text2)" }}>47d 12h 09m</span>
-      </div>
-      <div>
-        <span style={{ display: "inline-block", width: 40 }}>load</span>
-        <span style={{ color: "var(--text2)" }}>0.72 0.81 0.94</span>
-      </div>
-      <div>
-        <span style={{ display: "inline-block", width: 40 }}>procs</span>
-        <span style={{ color: "var(--amber)" }}>241</span>
-        <span style={{ color: "var(--text3)", marginLeft: 8 }}>running</span>
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TermPage() {
   const shellBottomRef = useRef<HTMLDivElement>(null);
+
+  const [deployDate, setDeployDate] = useState<string>(
+    () => process.env.NEXT_PUBLIC_DEPLOY_TIME || DEFAULT_DEPLOY_DATE,
+  );
+  const [uptimeStr, setUptimeStr] = useState<string>(() => {
+    const raw = process.env.NEXT_PUBLIC_DEPLOY_TIME || DEFAULT_DEPLOY_DATE;
+    return formatUptime(Date.now() - new Date(raw).getTime());
+  });
+  const [gitLog, setGitLog] = useState<GitCommitItem[]>(() => {
+    try {
+      const baked = process.env.NEXT_PUBLIC_GIT_COMMITS;
+      if (baked) {
+        const parsed = JSON.parse(baked);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_GIT_LOG;
+  });
+
+  useEffect(() => {
+    fetch("/api/sys/commit")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.deployedAt) {
+          setDeployDate(data.deployedAt);
+          setUptimeStr(
+            formatUptime(Date.now() - new Date(data.deployedAt).getTime()),
+          );
+        }
+        if (Array.isArray(data?.commits) && data.commits.length > 0) {
+          setGitLog(data.commits);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const target = deployDate || process.env.NEXT_PUBLIC_DEPLOY_TIME;
+    if (!target) return;
+
+    const interval = setInterval(() => {
+      setUptimeStr(formatUptime(Date.now() - new Date(target).getTime()));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [deployDate]);
 
   useEffect(() => {
     if (shellBottomRef.current) {
@@ -379,24 +304,11 @@ export default function TermPage() {
         delay={0.1}
       >
         <MatrixCanvas />
-        <PanelHead>
-          <Dagger />{" "}
-          <b
-            style={{
-              color: "var(--red)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontSize: 10,
-            }}
-          >
-            zsh
+        <PanelHead meta="zaevo@OMEN-erde · kitty.sh">
+          <Dagger /> ~/{" "}
+          <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+            TERMINAL
           </b>
-          <span
-            className="text-[11px] normal-case tracking-normal"
-            style={{ color: "var(--text3)" }}
-          >
-            kitty — zaevo@OMEN-erde
-          </span>
         </PanelHead>
         <PanelBody style={{ position: "relative", zIndex: 1 }}>
           <div
@@ -414,21 +326,24 @@ export default function TermPage() {
                 <div className="truncate" style={{ color: "var(--border2)" }}>
                   ┌─────────────────────────────────────────────────┐
                 </div>
-                {FASTFETCH_ROWS.map(({ k, v }) => (
-                  <div key={k} className="truncate" style={{ color: "var(--text2)" }}>
-                    {"  "}
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 88,
-                        color: "var(--text3)",
-                      }}
-                    >
-                      {k}
-                    </span>
-                    <span style={{ color: "var(--text)" }}>{v}</span>
-                  </div>
-                ))}
+                {FASTFETCH_ROWS.map(({ k, v }) => {
+                  const displayVal = k === "Uptime" ? uptimeStr : v;
+                  return (
+                    <div key={k} className="truncate" style={{ color: "var(--text2)" }}>
+                      {"  "}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 96,
+                          color: "var(--text3)",
+                        }}
+                      >
+                        {k}
+                      </span>
+                      <span style={{ color: "var(--text)" }}>{displayVal}</span>
+                    </div>
+                  );
+                })}
                 <div className="truncate" style={{ color: "var(--border2)" }}>
                   └─────────────────────────────────────────────────┘
                 </div>
@@ -444,8 +359,8 @@ export default function TermPage() {
               time="15:35:14"
               order="arg-first"
             />
-            {GIT_LOG.map((entry) => (
-              <div key={entry.hash}>
+            {gitLog.map((entry) => (
+              <div key={entry.hash} className="truncate">
                 <span
                   style={{
                     color: entry.fresh ? "var(--green)" : "var(--text2)",
@@ -536,75 +451,16 @@ export default function TermPage() {
         </PanelBody>
       </Panel>
 
-      {/* ── FILESYSTEM PANEL (bottom-right) ───────────────────────── */}
+      {/* ── TYPING TEST PANEL (bottom-right) ──────────────────────── */}
       <Panel className="md:col-span-2 xl:col-[5/11] xl:row-[4/11]" delay={0.4}>
-        <PanelHead>
-          <Dagger />{" "}
-          <b
-            style={{
-              color: "var(--red)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontSize: 10,
-            }}
-          >
-            fs
+        <PanelHead meta="ttype · monkeytype.sh">
+          <Dagger /> ~/{" "}
+          <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+            TYPING_TEST
           </b>
-          <span
-            className="text-[11px] normal-case tracking-normal"
-            style={{ color: "var(--text3)" }}
-          >
-            ~/repos/x_zaevo- — tree
-          </span>
         </PanelHead>
-        <PanelBody>
-          {/* Tree */}
-          <div
-            className="text-[11px] leading-[1.8] flex flex-col"
-            style={{ fontFamily: "var(--mono)" }}
-          >
-            <div>
-              <span style={{ color: "var(--red)" }}>┌──────&gt;</span>
-            </div>
-            <div className="flex justify-between w-full pr-[12px]">
-              <div>
-                <span style={{ color: "var(--red)" }}>│ </span>
-                <span style={{ color: "var(--text)" }}>zaevo</span>
-                <span style={{ color: "var(--text2)" }}> on </span>
-                <span style={{ color: "var(--text)" }}>OMEN-erde</span>
-                <span style={{ color: "var(--text2)" }}> at </span>
-                <span style={{ color: "var(--amber)" }}>…/x_zaevo-</span>
-                <span style={{ color: "var(--text2)" }}> via </span>
-                <span style={{ color: "var(--green)" }}>main</span>
-              </div>
-              <div style={{ color: "var(--text2)" }}>09:52:42</div>
-            </div>
-            <div>
-              <span style={{ color: "var(--red)" }}>└─&gt; </span>
-              <span style={{ color: "var(--text)" }}>tree</span>
-            </div>
-            <div>
-              <span style={{ color: "var(--amber)" }}> .</span>
-            </div>
-
-            {TREE_DATA.map((row, idx) => {
-              const { Icon, color } = getTreeIcon(row.n, row.isDir);
-              return (
-                <div key={idx}>
-                  <span
-                    style={{ color: "var(--border2)" }}
-                    className="whitespace-pre"
-                  >
-                    {row.p}
-                  </span>
-                  <span style={{ color }}>
-                    <Icon size={12} className="inline mb-[2px] mr-[6px]" />
-                    {row.n}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        <PanelBody className="flex flex-col">
+          <TypingTerminal />
         </PanelBody>
       </Panel>
 
@@ -613,24 +469,11 @@ export default function TermPage() {
         className="md:col-span-2 xl:col-[1/5] xl:row-[9/11]"
         delay={0.3}
       >
-        <PanelHead>
-          <Dagger />{" "}
-          <b
-            style={{
-              color: "var(--red)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontSize: 10,
-            }}
-          >
-            log
+        <PanelHead meta="journalctl -f · sys.log">
+          <Dagger /> ~/{" "}
+          <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+            JOURNAL_LOG
           </b>
-          <span
-            className="text-[11px] normal-case tracking-normal"
-            style={{ color: "var(--text3)" }}
-          >
-            journalctl -f
-          </span>
         </PanelHead>
         <PanelBody className="flex-1 overflow-hidden flex flex-col min-h-0" style={{ padding: "10px 12px" }}>
           <JournalLog entries={JOURNAL_LOGS} />
@@ -639,100 +482,32 @@ export default function TermPage() {
 
       {/* ── KEYBOARD PANEL (top-right) ─────────────────────────── */}
       <Panel className="md:col-span-1 xl:col-[5/8] xl:row-[1/4]" delay={0.2}>
-        <PanelHead>
-          <Dagger />{" "}
-          <b
-            style={{
-              color: "var(--red)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontSize: 10,
-            }}
-          >
-            kbd
+        <PanelHead meta="keyboard.live">
+          <Dagger /> ~/{" "}
+          <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+            KEYBOARD
           </b>
-          <span
-            className="text-[11px] normal-case tracking-normal"
-            style={{ color: "var(--text3)" }}
-          >
-            keyboard.live
-          </span>
         </PanelHead>
         <PanelBody style={{ padding: "10px 12px" }}>
           <KeyboardPanel />
         </PanelBody>
       </Panel>
 
-      {/* ── KEYBINDS PANEL (top-right 2) ─────────────────────────── */}
-      <Panel className="md:col-span-1 xl:col-[8/11] xl:row-[1/4]" delay={0.3}>
-        <PanelHead>
-          <Dagger />{" "}
-          <b
-            style={{
-              color: "var(--red)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontSize: 10,
-            }}
-          >
-            kbd
-          </b>
-          <span
-            className="text-[11px] normal-case tracking-normal"
-            style={{ color: "var(--text3)" }}
-          >
-            niri_keybinds.conf
-          </span>
-        </PanelHead>
-        <PanelBody style={{ padding: "10px 12px" }}>
-          <KeybindsPanel />
-        </PanelBody>
-      </Panel>
+      {/* ── LEADERBOARD PANEL (top-right 2) ──────────────────────── */}
+      <LeaderboardPanel
+        className="md:col-span-1 xl:col-[8/11] xl:row-[1/4]"
+        delay={0.3}
+        compact
+        hideFooter
+        fallbackRedirectUrl="/term"
+      />
     </div>
   );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function FsRow({
-  gutter,
-  name,
-  type,
-  indent = 0,
-  selected = false,
-}: {
-  gutter: string;
-  name: string;
-  type: "dir" | "file" | "link" | "exec";
-  indent?: number;
-  selected?: boolean;
-}) {
-  const COLOR = {
-    dir: "var(--amber)",
-    file: "var(--text2)",
-    link: "var(--green)",
-    exec: "var(--red)",
-  };
-  return (
-    <div style={{ paddingLeft: indent * 14 }}>
-      <span
-        style={{ color: "var(--border2)", marginRight: 4, userSelect: "none" }}
-      >
-        {gutter}
-      </span>
-      <span
-        style={{
-          color: COLOR[type],
-          background: selected ? "var(--red-mute)" : undefined,
-          padding: selected ? "0 4px" : undefined,
-          borderRadius: selected ? 2 : undefined,
-        }}
-      >
-        {name}
-      </span>
-    </div>
-  );
-}
+const emptySubscribe = () => () => {};
 
 const MAX_LOG_LINES = 7;
 
@@ -746,8 +521,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
   );
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   useEffect(() => {
     const id = setInterval(() => {

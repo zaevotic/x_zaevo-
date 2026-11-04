@@ -7,11 +7,36 @@ import SpotifyPanel from "@/components/sys/signal/spotify";
 import SignalTerminal from "@/components/sys/signal/SignalTerminal";
 
 const CHANNELS = [
-  { icon: "⌥", name: "GitHub", handle: "github.com/zaevotic", href: "https://github.com/zaevotic" },
-  { icon: "in", name: "LinkedIn", handle: "linkedin.com/in/snehil-gautam-198347318/", href: "https://linkedin.com/in/snehil-gautam-198347318/" },
-  { icon: "𝕏", name: "X", handle: "x.com/zaevo_licious", href: "https://x.com/zaevo_licious" },
-  { icon: "#", name: "Discord", handle: "@thatdudeudontknow", href: "https://discord.com/users/1301959352415948852" },
-  { icon: "@", name: "Email", handle: "zaevotic@proton.me", href: "mailto:zaevotic@proton.me" },
+  {
+    icon: "⌥",
+    name: "GitHub",
+    handle: "github.com/zaevotic",
+    href: "https://github.com/zaevotic",
+  },
+  {
+    icon: "in",
+    name: "LinkedIn",
+    handle: "linkedin.com/in/snehil-gautam-198347318/",
+    href: "https://linkedin.com/in/snehil-gautam-198347318/",
+  },
+  {
+    icon: "𝕏",
+    name: "X",
+    handle: "x.com/zaevo_licious",
+    href: "https://x.com/zaevo_licious",
+  },
+  {
+    icon: "#",
+    name: "Discord",
+    handle: "@thatdudeudontknow",
+    href: "https://discord.com/users/1301959352415948852",
+  },
+  {
+    icon: "@",
+    name: "Email",
+    handle: "zaevotic@proton.me",
+    href: "mailto:zaevotic@proton.me",
+  },
 ];
 
 const AVAIL = [
@@ -27,28 +52,59 @@ export default function TemporaryPage() {
   const [message, setMessage] = useState("");
   const [latestCommit, setLatestCommit] = useState("...");
   const [mailLogs, setMailLogs] = useState([
-    { time: "14:02", status: "OK", color: "var(--green)", msg: "message received" },
-    { time: "14:03", status: "INF", color: "var(--amber)", msg: "autoreply queued" },
-    { time: "14:03", status: "OK", color: "var(--green)", msg: "sent [250 OK]" },
+    {
+      time: "14:02",
+      status: "OK",
+      color: "var(--green)",
+      msg: "message received",
+    },
+    {
+      time: "14:03",
+      status: "INF",
+      color: "var(--amber)",
+      msg: "autoreply queued",
+    },
+    {
+      time: "14:03",
+      status: "OK",
+      color: "var(--green)",
+      msg: "sent [250 OK]",
+    },
   ]);
 
   const handleTransmit = () => {
     if (!message) return;
-    
-    const time = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-    setMailLogs(prev => [
+
+    const time = new Date().toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    setMailLogs((prev) => [
       ...prev,
-      { time, status: "INF", color: "var(--amber)", msg: "opening mail client..." }
+      {
+        time,
+        status: "INF",
+        color: "var(--amber)",
+        msg: "opening mail client...",
+      },
     ]);
-    
+
     const subject = encodeURIComponent(`Message from ${name || "Guest"}`);
     const body = encodeURIComponent(message);
     window.location.href = `mailto:zaevotic@proton.me?subject=${subject}&body=${body}`;
-    
+
     setTimeout(() => {
-      setMailLogs(prev => [
+      setMailLogs((prev) => [
         ...prev,
-        { time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }), status: "OK", color: "var(--green)", msg: "mail client invoked" }
+        {
+          time: new Date().toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          status: "OK",
+          color: "var(--green)",
+          msg: "mail client invoked",
+        },
       ]);
     }, 1000);
   };
@@ -76,18 +132,31 @@ export default function TemporaryPage() {
   };
 
   return (
-    <div className="grid gap-[10px] h-auto xl:h-full grid-cols-1 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1.5fr]">
-      {/* Left Column: Send Message (Contact) */}
-      <div className="flex flex-col h-full">
-        <Panel delay={0.1} className="h-full flex flex-col">
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>~/SEND_MESSAGE</b>
+    <div className="grid gap-[10px] grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.85fr)_minmax(0,1.15fr)] h-auto landscape:min-h-full xl:min-h-full">
+      {/* ── COLUMN 1: TRANSMIT (SEND_MESSAGE) ─────────── */}
+      <div className="flex flex-col h-full min-w-0">
+        <Panel
+          delay={0.1}
+          className="h-full min-h-[360px] flex flex-col"
+        >
+          <PanelHead meta="contact.sh">
+            <Dagger /> ~/{" "}
+            <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+              SEND_MESSAGE
+            </b>
           </PanelHead>
-          <PanelBody className="flex flex-col flex-1">
+          <PanelBody className="flex-1 min-h-0 flex flex-col gap-[14px] p-[16px]">
+            <p
+              className="text-[11px] leading-[1.6] shrink-0 mb-[2px]"
+              style={{ color: "var(--text3)", fontFamily: "var(--sans)" }}
+            >
+              {"// "}Opens a pre-filled draft in your mail client. Direct transmission, zero telemetry.
+            </p>
+
             {/* Name */}
-            <div className="mb-[14px]">
+            <div className="shrink-0">
               <label
-                className="block text-[10px] tracking-[1px] uppercase mb-[7px]"
+                className="block text-[10px] tracking-[1px] uppercase mb-[6px]"
                 style={{ color: "var(--red)" }}
               >
                 <span style={{ color: "var(--text3)" }}>$ </span>enter --name
@@ -99,10 +168,11 @@ export default function TemporaryPage() {
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
+
             {/* Email */}
-            <div className="mb-[14px]">
+            <div className="shrink-0">
               <label
-                className="block text-[10px] tracking-[1px] uppercase mb-[7px]"
+                className="block text-[10px] tracking-[1px] uppercase mb-[6px]"
                 style={{ color: "var(--red)" }}
               >
                 <span style={{ color: "var(--text3)" }}>$ </span>enter --email
@@ -115,43 +185,51 @@ export default function TemporaryPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
             {/* Message */}
-            <div className="mb-[14px] flex-1 flex flex-col">
+            <div className="flex-1 min-h-[120px] flex flex-col">
               <label
-                className="block text-[10px] tracking-[1px] uppercase mb-[7px]"
+                className="block text-[10px] tracking-[1px] uppercase mb-[6px] shrink-0"
                 style={{ color: "var(--red)" }}
               >
                 <span style={{ color: "var(--text3)" }}>$ </span>nano --message
               </label>
               <textarea
-                style={{ ...inputStyle, resize: "none", flex: 1 }}
-                placeholder="write your message here..."
+                style={{ ...inputStyle, resize: "none" }}
+                className="flex-1 min-h-[100px] w-full"
+                placeholder="write your transmission here..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
             </div>
+
             {/* Submit */}
             <button
               onClick={handleTransmit}
-              className="w-full px-[18px] py-[11px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors mt-auto"
+              type="button"
+              className="w-full px-[18px] py-[12px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors hover:opacity-90 active:scale-[0.99] shrink-0 mt-auto"
               style={{
                 background: "var(--red)",
                 borderColor: "var(--red)",
                 color: "var(--bg)",
+                fontFamily: "var(--mono)",
               }}
             >
-              + transmit message
+              + transmit message →
             </button>
           </PanelBody>
         </Panel>
       </div>
 
-      {/* Middle Column: Spotify, Now, Channels */}
-      <div className="flex flex-col gap-[10px]">
+      {/* ── COLUMN 2: TELEMETRY (STATUS, AVAIL, SPOTIFY) ─────────── */}
+      <div className="flex flex-col gap-[10px] min-w-0">
         {/* STATUS PANEL */}
-        <Panel delay={0.3}>
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>NOW</b>
+        <Panel delay={0.2}>
+          <PanelHead meta="online · now.rc">
+            <Dagger /> ~/{" "}
+            <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+              STATUS
+            </b>
           </PanelHead>
           <PanelBody>
             <StatRow
@@ -165,9 +243,12 @@ export default function TemporaryPage() {
         </Panel>
 
         {/* Availability panel */}
-        <Panel delay={0.4}>
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>AVAIL</b>
+        <Panel delay={0.25}>
+          <PanelHead meta="schedule.cfg">
+            <Dagger /> ~/{" "}
+            <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+              AVAIL
+            </b>
           </PanelHead>
           <PanelBody>
             {AVAIL.map((row, i) => (
@@ -182,100 +263,132 @@ export default function TemporaryPage() {
         </Panel>
 
         {/* SPOTIFY PANEL */}
-        <Panel delay={0.2}>
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>SPOTIFY</b> .live
-          </PanelHead>
-          <PanelBody>
-            <SpotifyPanel />
-          </PanelBody>
-        </Panel>
+        <SpotifyPanel delay={0.3} />
       </div>
 
-      {/* Right Column: Avail, Mail Log, Memo */}
-      <div className="flex flex-col gap-[10px] h-full md:col-span-2 xl:col-span-1">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px] shrink-0">
+      {/* ── COLUMN 3: CONNECTIONS (CHANNELS, MAIL LOG & SIGNAL) ───── */}
+      <div className="flex flex-col gap-[10px] md:col-span-2 xl:col-span-1 min-w-0">
+        {/* Top row in Column 3: Channels on the left, Mail log on the right */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px] min-w-0">
           {/* CHANNELS PANEL */}
-          <Panel delay={0.5}>
-            <PanelHead>
-              <Dagger /> <b style={{ color: "var(--text)" }}>CHANNELS</b>
+          <Panel delay={0.35} className="flex flex-col h-full">
+            <PanelHead meta="channels.lst">
+              <Dagger /> ~/{" "}
+              <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+                CHANNELS
+              </b>
             </PanelHead>
             <div className="flex flex-col">
               {CHANNELS.map((c, i) => {
                 const Wrapper = c.href ? "a" : "div";
                 return (
-                <Wrapper
-                  key={c.name}
-                  {...(c.href ? { href: c.href, target: c.href.startsWith("mailto:") ? "_self" : "_blank", rel: "noopener noreferrer" } : {})}
-                  className="flex items-center gap-[12px] px-[14px] py-[12px] no-underline group transition-colors hover:bg-[var(--red-hover-tint)]"
-                  style={{
-                    borderBottom:
-                      i < CHANNELS.length - 1
-                        ? "1px solid var(--border)"
-                        : "none",
-                    cursor: c.href ? "pointer" : "default",
-                  }}
-                >
-                  <div
-                    className="flex items-center justify-center text-[13px] transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red)]"
+                  <Wrapper
+                    key={c.name}
+                    {...(c.href
+                      ? {
+                          href: c.href,
+                          target: c.href.startsWith("mailto:")
+                            ? "_self"
+                            : "_blank",
+                          rel: "noopener noreferrer",
+                        }
+                      : {})}
+                    className="flex items-center justify-between px-[12px] py-[8px] no-underline group transition-colors hover:bg-[var(--red-hover-tint)]"
                     style={{
-                      width: 30,
-                      height: 30,
-                      border: "1px solid var(--border2)",
-                      color: "var(--red-ember)",
-                      flexShrink: 0,
+                      borderBottom:
+                        i < CHANNELS.length - 1
+                          ? "1px solid var(--border)"
+                          : "none",
+                      cursor: c.href ? "pointer" : "default",
                     }}
                   >
-                    {c.icon}
-                  </div>
-                  <div>
-                    <div
-                      className="text-[11px] tracking-[0.5px] transition-colors group-hover:text-[var(--text)]"
-                      style={{ color: "var(--text)" }}
-                    >
-                      {c.name}
+                    <div className="flex items-center gap-[10px] min-w-0 flex-1 mr-[6px]">
+                      <div
+                        className="flex items-center justify-center text-[12px] transition-colors group-hover:border-[var(--red-dim)] group-hover:text-[var(--red)]"
+                        style={{
+                          width: 26,
+                          height: 26,
+                          border: "1px solid var(--border2)",
+                          color: "var(--red-ember)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {c.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="text-[11px] font-medium tracking-[0.5px] transition-colors group-hover:text-[var(--text)] truncate"
+                          style={{ color: "var(--text)" }}
+                        >
+                          {c.name}
+                        </div>
+                        <div
+                          className="text-[10px] truncate transition-colors group-hover:text-[var(--amber)]"
+                          style={{ color: "var(--text3)" }}
+                        >
+                          {c.handle}
+                        </div>
+                      </div>
                     </div>
-                    <div
-                      className="text-[10px] truncate max-w-[120px] block transition-colors group-hover:text-[var(--amber)]"
-                      style={{ color: "var(--text2)" }}
+                    <span
+                      className="text-[11px] transition-transform group-hover:translate-x-[2px] group-hover:text-[var(--red)]"
+                      style={{ color: "var(--text3)" }}
                     >
-                      {c.handle}
-                    </div>
-                  </div>
-                </Wrapper>
+                      ↗
+                    </span>
+                  </Wrapper>
                 );
               })}
             </div>
           </Panel>
 
-          {/* Mail Log */}
-          <Panel delay={0.6} className="flex flex-col h-full">
-            <PanelHead meta="tail">
-              <Dagger /> <b style={{ color: "var(--text)" }}>MAIL.LOG</b>
+          {/* MAIL LOG PANEL (to the right of Channels) */}
+          <Panel delay={0.4} className="flex flex-col h-full">
+            <PanelHead meta="tail · mail.log">
+              <Dagger /> ~/{" "}
+              <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+                MAIL
+              </b>
             </PanelHead>
-            <PanelBody className="flex flex-col gap-[4px]">
+            <PanelBody className="flex flex-col gap-[6px] p-[10px_12px] overflow-y-auto">
               {mailLogs.map((log, i) => (
-                <div key={i} className="flex gap-[8px] text-[10px] leading-[1.7]">
+                <div
+                  key={i}
+                  className="flex gap-[6px] text-[10px] leading-[1.6] font-mono min-w-0"
+                >
                   <span style={{ color: "var(--text3)", flexShrink: 0 }}>
                     {log.time}
                   </span>
-                  <span style={{ width: 20, flexShrink: 0, color: log.color }}>
+                  <span
+                    style={{
+                      width: 22,
+                      flexShrink: 0,
+                      color: log.color,
+                      fontWeight: 600,
+                    }}
+                  >
                     {log.status}
                   </span>
-                  <span style={{ color: "var(--text2)" }}>{log.msg}</span>
+                  <span
+                    className="truncate flex-1 min-w-0"
+                    style={{ color: "var(--text2)" }}
+                    title={log.msg}
+                  >
+                    {log.msg}
+                  </span>
                 </div>
               ))}
             </PanelBody>
           </Panel>
         </div>
 
-        {/* SIGNAL TERMINAL PANEL */}
-        <Panel
-          delay={0.7}
-          className="flex-1 overflow-hidden flex flex-col min-h-0"
-        >
-          <PanelHead>
-            <Dagger /> <b style={{ color: "var(--text)" }}>SIGNAL</b> .--.
+        {/* Bottom in Column 3: Signal Terminal */}
+        <Panel delay={0.45} className="flex flex-col">
+          <PanelHead meta=".--. · morse.raw">
+            <Dagger /> ~/{" "}
+            <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+              SIGNAL
+            </b>
           </PanelHead>
           <PanelBody className="flex flex-col p-0" style={{ padding: 0 }}>
             <SignalTerminal />

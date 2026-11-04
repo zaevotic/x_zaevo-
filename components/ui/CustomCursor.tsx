@@ -1,20 +1,30 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 
 const INTERACTIVE_SELECTOR =
   'a, button, input, textarea, select, [role="button"], [data-cursor], .tab, .jentry, .filter';
 
+function subscribeFinePointer(callback: () => void) {
+  const mq = window.matchMedia("(pointer: fine)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getFinePointerSnapshot() {
+  return window.matchMedia("(pointer: fine)").matches;
+}
+
+function getFinePointerServerSnapshot() {
+  return true;
+}
+
 function useIsFinePointer() {
-  const [fine, setFine] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia("(pointer: fine)");
-    setFine(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setFine(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return fine;
+  return useSyncExternalStore(
+    subscribeFinePointer,
+    getFinePointerSnapshot,
+    getFinePointerServerSnapshot,
+  );
 }
 
 function lerp(start: number, end: number, amt: number) {

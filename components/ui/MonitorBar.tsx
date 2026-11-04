@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { Shield } from "lucide-react";
 import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
-const TABS = [
+const BASE_TABS = [
   { num: "1", label: "home", href: "/home" },
   { num: "2", label: "journal", href: "/journal" },
   { num: "3", label: "term", href: "/term" },
@@ -15,6 +17,14 @@ const TABS = [
 
 export default function MonitorBar() {
   const pathname = usePathname();
+  const { isLoaded, isSignedIn, user } = useUser();
+  const isAdmin =
+    (user?.publicMetadata as { role?: string } | undefined)?.role === "admin";
+
+  const tabs =
+    isAdmin || pathname.startsWith("/admin")
+      ? [...BASE_TABS, { num: "5", label: "admin", href: "/admin" }]
+      : BASE_TABS;
 
   return (
     <header
@@ -44,7 +54,7 @@ export default function MonitorBar() {
 
         {/* Workspace tabs */}
         <nav className="flex gap-[4px]">
-          {TABS.map(({ num, label, href }) => {
+          {tabs.map(({ num, label, href }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
@@ -80,7 +90,59 @@ export default function MonitorBar() {
       </div>
 
       {/* ── Right ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-[16px]">
+      <div className="flex items-center gap-[12px]">
+        {isLoaded && (
+          <div className="flex items-center gap-[8px]">
+            {isSignedIn && user ? (
+              <div className="flex items-center gap-[8px]">
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="hidden sm:inline-flex items-center gap-[4px] px-[6px] py-[2px] text-[10px] uppercase tracking-[0.8px] border transition-colors"
+                    style={{
+                      color: "var(--amber)",
+                      borderColor: "var(--amber-dim)",
+                      background: "var(--amber-warm-dim)",
+                    }}
+                    title="Root Admin Workspace"
+                  >
+                    <Shield size={10} />
+                    <span>root</span>
+                  </Link>
+                )}
+                <span
+                  className="hidden sm:inline text-[11px]"
+                  style={{ color: "var(--text2)" }}
+                >
+                  @{user.username || user.firstName || "operator"}
+                </span>
+                <div className="flex items-center scale-75 origin-right">
+                  <UserButton />
+                </div>
+              </div>
+            ) : (
+              <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                <button
+                  type="button"
+                  className="px-[8px] py-[2px] text-[11px] tracking-[0.5px] border cursor-pointer transition-colors hover:border-[var(--red-dim)] hover:text-[var(--red-ember)]"
+                  style={{
+                    color: "var(--text2)",
+                    borderColor: "var(--border2)",
+                    background: "var(--bg2)",
+                  }}
+                >
+                  [auth: login]
+                </button>
+              </SignInButton>
+            )}
+            <span
+              className="hidden md:inline text-[12px]"
+              style={{ color: "var(--border2)" }}
+            >
+              │
+            </span>
+          </div>
+        )}
         <span
           className="hidden md:block text-[12px] tracking-[0.1em]"
           style={{ color: "var(--text3)" }}

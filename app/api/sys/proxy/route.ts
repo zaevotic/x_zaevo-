@@ -1,12 +1,10 @@
 // Edge proxy – replaces deprecated middleware
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { visits } from "@/lib/schema";
-import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 /** Increment the global visit counter on **every** request. */
-export async function GET(request: Request) {
+export async function GET() {
   // Ensure the `visits` table exists – run a lightweight CREATE IF NOT EXISTS on first hit
   await db.run(sql`CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, count INTEGER NOT NULL)`);
 

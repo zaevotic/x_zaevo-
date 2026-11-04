@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "new": "bun scripts/new-post.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.23",
     "@libsql/client": "^0.17.4",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.42.2",

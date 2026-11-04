@@ -129,7 +129,10 @@ export default function ResumeScratchpad() {
                   </div>
                 }
               >
-                <Dagger /> <b style={{ color: "var(--text)" }}>~/resume.pdf</b>
+                <Dagger /> ~/{" "}
+                <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
+                  RESUME
+                </b>
               </PanelHead>
               <PanelBody
                 className="flex-1 w-full h-full overflow-auto"

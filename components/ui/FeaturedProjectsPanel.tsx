@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
+import { getSharedGithubData, getCachedGithubData } from "@/lib/github-client";
 
 interface RepoProject {
   name: string;
@@ -39,16 +40,18 @@ export default function FeaturedProjectsPanel({
 }: {
   delay?: number;
 }) {
-  const [items, setItems] = useState<RepoProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedGithubData();
+  const cachedRepos = Array.isArray(cached?.repos) && cached.repos.length > 0 ? (cached.repos as RepoProject[]) : null;
+
+  const [items, setItems] = useState<RepoProject[]>(() => cachedRepos ?? []);
+  const [loading, setLoading] = useState(!cachedRepos);
   const isHovered = useRef(false);
   const isVisible = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const wheelCooldown = useRef(false);
 
   useEffect(() => {
-    fetch("/api/sys/github")
-      .then((res) => res.json())
+    getSharedGithubData()
       .then((data) => {
         if (Array.isArray(data.repos) && data.repos.length > 0) {
           setItems(data.repos);

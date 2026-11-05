@@ -301,7 +301,7 @@ export default function TermPage() {
       {/* ── SHELL PANEL (top-left) ──────────────────────────── */}
       <Panel
         className="relative md:col-span-2 xl:col-[1/5] xl:row-[1/9]"
-        delay={0.1}
+        delay={0.08}
       >
         <MatrixCanvas />
         <PanelHead meta="zaevo@OMEN-erde · kitty.sh">
@@ -452,7 +452,7 @@ export default function TermPage() {
       </Panel>
 
       {/* ── TYPING TEST PANEL (bottom-right) ──────────────────────── */}
-      <Panel className="md:col-span-2 xl:col-[5/11] xl:row-[4/11]" delay={0.4}>
+      <Panel className="md:col-span-2 xl:col-[5/11] xl:row-[4/11]" delay={0.32}>
         <PanelHead meta="ttype · monkeytype.sh">
           <Dagger /> ~/{" "}
           <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
@@ -467,7 +467,7 @@ export default function TermPage() {
       {/* ── JOURNAL LOG PANEL (bottom-left) ──────────────────────── */}
       <Panel
         className="md:col-span-2 xl:col-[1/5] xl:row-[9/11]"
-        delay={0.3}
+        delay={0.40}
       >
         <PanelHead meta="journalctl -f · sys.log">
           <Dagger /> ~/{" "}
@@ -481,7 +481,7 @@ export default function TermPage() {
       </Panel>
 
       {/* ── KEYBOARD PANEL (top-right) ─────────────────────────── */}
-      <Panel className="md:col-span-1 xl:col-[5/8] xl:row-[1/4]" delay={0.2}>
+      <Panel className="md:col-span-1 xl:col-[5/8] xl:row-[1/4]" delay={0.16}>
         <PanelHead meta="keyboard.live">
           <Dagger /> ~/{" "}
           <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
@@ -496,7 +496,7 @@ export default function TermPage() {
       {/* ── LEADERBOARD PANEL (top-right 2) ──────────────────────── */}
       <LeaderboardPanel
         className="md:col-span-1 xl:col-[8/11] xl:row-[1/4]"
-        delay={0.3}
+        delay={0.24}
         compact
         hideFooter
         fallbackRedirectUrl="/term"

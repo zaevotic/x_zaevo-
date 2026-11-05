@@ -3,23 +3,32 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { leaderboard } from "@/lib/schema";
 import { desc, eq, sql } from "drizzle-orm";
+import { parseLeaderboardMode } from "@/lib/leaderboard";
+
+let isLeaderboardTableReady = false;
 
 async function ensureLeaderboardTable() {
-  await db.run(sql`
-    CREATE TABLE IF NOT EXISTS leaderboard (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
-      username TEXT NOT NULL,
-      image_url TEXT,
-      wpm INTEGER NOT NULL,
-      raw_wpm INTEGER NOT NULL,
-      accuracy INTEGER NOT NULL,
-      consistency INTEGER NOT NULL,
-      mode TEXT NOT NULL,
-      chars TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    )
-  `);
+  if (isLeaderboardTableReady) return;
+  try {
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS leaderboard (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        username TEXT NOT NULL,
+        image_url TEXT,
+        wpm INTEGER NOT NULL,
+        raw_wpm INTEGER NOT NULL,
+        accuracy INTEGER NOT NULL,
+        consistency INTEGER NOT NULL,
+        mode TEXT NOT NULL,
+        chars TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    `);
+    isLeaderboardTableReady = true;
+  } catch (err) {
+    console.error("[Leaderboard] Table check failed:", err);
+  }
 }
 
 async function getRankedEntries() {
@@ -88,11 +97,22 @@ export async function POST(req: NextRequest) {
     const imageUrl = user.imageUrl ?? null;
     const nowIso = new Date().toISOString();
 
-    const existing = await db
+    const parsedTarget = parseLeaderboardMode(mode);
+
+    // Fetch this user's existing records across modes
+    const userRecords = await db
       .select()
       .from(leaderboard)
-      .where(eq(leaderboard.userId, user.id))
-      .get();
+      .where(eq(leaderboard.userId, user.id));
+
+    // Find personal best in this exact category and subcategory
+    const existing = userRecords.find((r) => {
+      const p = parseLeaderboardMode(r.mode);
+      return (
+        p.category === parsedTarget.category &&
+        p.subCategory === parsedTarget.subCategory
+      );
+    });
 
     let isPersonalBest = false;
 
@@ -140,11 +160,21 @@ export async function POST(req: NextRequest) {
     }
 
     const entries = await getRankedEntries();
-    const userEntry = entries.find((e) => e.userId === user.id);
+    // Rank specifically within this subcategory
+    const subEntries = entries.filter((e) => {
+      const p = parseLeaderboardMode(e.mode);
+      return (
+        p.category === parsedTarget.category &&
+        p.subCategory === parsedTarget.subCategory
+      );
+    });
+    const userEntryIdx = subEntries.findIndex((e) => e.userId === user.id);
+    const userRank = userEntryIdx !== -1 ? userEntryIdx + 1 : null;
+    const userEntry = userEntryIdx !== -1 ? subEntries[userEntryIdx] : null;
 
     return NextResponse.json({
       entries,
-      userRank: userEntry?.rank ?? null,
+      userRank,
       bestWpm: userEntry?.wpm ?? wpm,
       isPersonalBest,
     });

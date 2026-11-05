@@ -19,10 +19,12 @@ const FALLBACK: WakaLang[] = [
   { name: "Bash", pct: 4.7, text: "" },
 ];
 
+let cachedWaka: { langs: WakaLang[]; meta: string } | null = null;
+
 export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
-  const [langs, setLangs] = useState<WakaLang[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [meta, setMeta] = useState("syncing...");
+  const [langs, setLangs] = useState<WakaLang[]>(() => cachedWaka?.langs ?? []);
+  const [loading, setLoading] = useState(!cachedWaka);
+  const [meta, setMeta] = useState(() => cachedWaka?.meta ?? "syncing...");
 
   useEffect(() => {
     fetch("/api/sys/wakatime")
@@ -34,15 +36,21 @@ export default function WakaTimePanel({ delay = 0 }: { delay?: number }) {
           payload.languages.length === 0
         ) {
           setLangs(FALLBACK);
-          setMeta("cached / 30d");
+          const m = "cached / 30d";
+          setMeta(m);
+          cachedWaka = { langs: FALLBACK, meta: m };
           return;
         }
         setLangs(payload.languages);
-        setMeta(`${payload.total || "0 hrs"} / ${payload.range || "30d"}`);
+        const m = `${payload.total || "0 hrs"} / ${payload.range || "30d"}`;
+        setMeta(m);
+        cachedWaka = { langs: payload.languages, meta: m };
       })
       .catch(() => {
         setLangs(FALLBACK);
-        setMeta("cached / 30d");
+        const m = "cached / 30d";
+        setMeta(m);
+        cachedWaka = { langs: FALLBACK, meta: m };
       })
       .finally(() => setLoading(false));
   }, []);

@@ -21,13 +21,19 @@ interface SpotifyPanelProps {
   className?: string;
 }
 
+let cachedSpotifyData: SpotifyData | null = null;
+
 export default function SpotifyPanel({
-  delay = 0.45,
+  delay = 0,
   className = "",
 }: SpotifyPanelProps) {
-  const [track, setTrack] = useState<SpotifyData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
+  const [track, setTrack] = useState<SpotifyData | null>(() => cachedSpotifyData);
+  const [loading, setLoading] = useState(!cachedSpotifyData);
+  const [progress, setProgress] = useState(() =>
+    cachedSpotifyData?.progress && cachedSpotifyData.duration
+      ? (cachedSpotifyData.progress / cachedSpotifyData.duration) * 100
+      : 0,
+  );
   const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -36,6 +42,7 @@ export default function SpotifyPanel({
         .then((r) => r.json())
         .then((data: SpotifyData) => {
           setTrack(data);
+          cachedSpotifyData = data;
           setProgress(
             data.progress && data.duration
               ? (data.progress / data.duration) * 100

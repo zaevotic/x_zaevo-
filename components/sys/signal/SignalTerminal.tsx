@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { getSharedGithubData, getCachedGithubData, type GithubApiCommit } from "@/lib/github-client";
 
 const PHRASES = [
   "ABSTRACTIONS MUST EARN THEIR KEEP OR THEY GET DELETED, KABAM",
@@ -50,9 +51,23 @@ interface Commit {
   date: Date;
 }
 
+function parseSignalCommits(commits?: GithubApiCommit[]): Commit[] {
+  if (!Array.isArray(commits)) return [];
+  return commits
+    .map((c) => ({
+      ...c,
+      date: new Date(c.date),
+    }))
+    .filter((c) => c.repo === "x_zaevo-" || c.repo === "zaevotic")
+    .slice(0, 3);
+}
+
 export default function SignalTerminal() {
-  const [commits, setCommits] = useState<Commit[]>([]);
-  const [loadingCommits, setLoadingCommits] = useState(true);
+  const cached = getCachedGithubData();
+  const cachedCommits = cached?.commits ? parseSignalCommits(cached.commits) : null;
+
+  const [commits, setCommits] = useState<Commit[]>(() => cachedCommits ?? []);
+  const [loadingCommits, setLoadingCommits] = useState(!cachedCommits);
   const [commitError, setCommitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -63,24 +78,16 @@ export default function SignalTerminal() {
   };
 
   useEffect(() => {
-    fetch("/api/sys/github")
-      .then((r) => r.json())
+    getSharedGithubData()
       .then((payload) => {
         if (!payload.error && Array.isArray(payload.commits)) {
-          const filtered = payload.commits
-            .map((c: Commit) => ({
-              ...c,
-              date: new Date(c.date),
-            }))
-            .filter((c: Commit) => c.repo === "x_zaevo-" || c.repo === "zaevotic")
-            .slice(0, 3);
-          setCommits(filtered);
+          setCommits(parseSignalCommits(payload.commits));
         }
       })
       .catch((e) => {
-            console.error(e);
-            setCommitError('Failed to load commits');
-          })
+        console.error(e);
+        setCommitError("Failed to load commits");
+      })
       .finally(() => setLoadingCommits(false));
   }, []);
 

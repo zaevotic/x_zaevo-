@@ -233,11 +233,20 @@ export default function JournalWorkspace({ initialPosts }: Props) {
           className="h-full w-full flex flex-col shadow-2xl md:shadow-none"
         >
           <PanelHead
-            meta={`${filteredEntries.length} of ${entries.length} · entries.lst`}
+            meta={
+              <span className="tabular-nums">
+                {filteredEntries.length}/{entries.length}
+                <span className="hidden sm:inline"> entries</span>
+                <span className="hidden 2xl:inline"> · entries.lst</span>
+              </span>
+            }
           >
             <Dagger /> ~/{" "}
-            <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
-              JOURNAL_ENTRIES
+            <b
+              className="truncate"
+              style={{ color: "var(--text)", letterSpacing: "1px" }}
+            >
+              <span className="hidden sm:inline">JOURNAL_</span>ENTRIES
             </b>
           </PanelHead>
 
@@ -430,7 +439,7 @@ export default function JournalWorkspace({ initialPosts }: Props) {
                   <span>{copiedCurl ? "COPIED" : "CURL"}</span>
                 </button>
               )}
-              <span>
+              <span className="truncate max-w-[130px] sm:max-w-[200px] md:max-w-[280px] xl:max-w-none">
                 {selected
                   ? `${selected.date} · ${selected.id}.md`
                   : "— · entry.md"}

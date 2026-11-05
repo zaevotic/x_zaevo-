@@ -6,7 +6,14 @@ const NOW_PLAYING_URL =
 const RECENTLY_PLAYED_URL =
   "https://api.spotify.com/v1/me/player/recently-played?limit=1";
 
+let cachedAccessToken: string | null = null;
+let tokenExpiresAt = 0;
+
 async function getAccessToken(): Promise<string> {
+  if (cachedAccessToken && Date.now() < tokenExpiresAt) {
+    return cachedAccessToken;
+  }
+
   const basic = Buffer.from(
     `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
   ).toString("base64");
@@ -24,8 +31,13 @@ async function getAccessToken(): Promise<string> {
     cache: "no-store",
   });
 
-  const { access_token } = await res.json();
-  return access_token;
+  const data = await res.json();
+  if (data?.access_token) {
+    cachedAccessToken = data.access_token;
+    tokenExpiresAt =
+      Date.now() + Math.max(60, Number(data.expires_in ?? 3600) - 60) * 1000;
+  }
+  return cachedAccessToken || "";
 }
 
 export async function GET() {

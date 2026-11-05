@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
+import { getSharedGithubData, getCachedGithubData, type GithubApiCommit } from "@/lib/github-client";
 
 interface CommitLog {
   id: string;
@@ -12,9 +13,25 @@ interface CommitLog {
   date: Date;
 }
 
+function parseCommits(commits?: GithubApiCommit[]): CommitLog[] {
+  if (!Array.isArray(commits)) return [];
+  return commits
+    .map((c) => ({
+      id: c.id,
+      repo: c.repo,
+      message: c.message,
+      date: new Date(c.date),
+    }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 25);
+}
+
 export default function SystemLogPanel({ delay = 0 }: { delay?: number }) {
-  const [items, setItems] = useState<CommitLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedGithubData();
+  const cachedCommits = cached?.commits ? parseCommits(cached.commits) : null;
+
+  const [items, setItems] = useState<CommitLog[]>(() => cachedCommits ?? []);
+  const [loading, setLoading] = useState(!cachedCommits);
   const isHovered = useRef(false);
   const isVisible = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,30 +45,12 @@ export default function SystemLogPanel({ delay = 0 }: { delay?: number }) {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch recent commits (up to 25 latest)
+  // Fetch recent commits (up to 25 latest) via shared client cache
   useEffect(() => {
-    fetch("/api/sys/github")
-      .then((r) => r.json())
+    getSharedGithubData()
       .then((payload) => {
         if (!payload.error && Array.isArray(payload.commits)) {
-          const sorted = (
-            payload.commits as {
-              id: string;
-              repo: string;
-              message: string;
-              date: string;
-            }[]
-          )
-            .map((c) => ({
-              id: c.id,
-              repo: c.repo,
-              message: c.message,
-              date: new Date(c.date),
-            }))
-            .sort((a, b) => b.date.getTime() - a.date.getTime())
-            .slice(0, 25);
-
-          setItems(sorted);
+          setItems(parseCommits(payload.commits));
         }
       })
       .catch((e) =>

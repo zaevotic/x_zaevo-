@@ -30,17 +30,17 @@ interface PanelBodyProps {
 export function PanelHead({ children, meta }: PanelHeadProps) {
   return (
     <div
-      className="flex items-center justify-between px-[14px] py-[9px] border-b shrink-0 z-10"
+      className="flex items-center justify-between px-[14px] py-[9px] border-b shrink-0 z-10 gap-[8px] min-w-0"
       style={{ borderColor: "var(--border)", background: "var(--bg2)" }}
     >
       <div
-        className="flex items-center gap-[8px] text-[10px] tracking-[1.5px] uppercase"
+        className="flex items-center gap-[6px] sm:gap-[8px] text-[10px] tracking-[1px] sm:tracking-[1.5px] uppercase min-w-0 truncate"
         style={{ color: "var(--text2)" }}
       >
         {children}
       </div>
       {meta && (
-        <div className="text-[10px]" style={{ color: "var(--text3)" }}>
+        <div className="text-[10px] shrink-0 text-right" style={{ color: "var(--text3)" }}>
           {meta}
         </div>
       )}
@@ -74,10 +74,10 @@ export default function Panel({
 }: PanelProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+      initial={{ opacity: 0, y: 12, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
-        duration: 0.6,
+        duration: 0.45,
         ease: [0.16, 1, 0.3, 1], // premium custom easeOut
         delay: delay,
       }}

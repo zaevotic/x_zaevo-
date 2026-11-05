@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { getSharedGithubData, getCachedGithubData, type GithubCalendarWeek } from "@/lib/github-client";
 
 // Build a 52-week grid aligned to real calendar days
 function buildWeekGrid(cells: string[]) {
@@ -71,14 +72,49 @@ const DAY_LABEL_WIDTH = 28;
 const DAY_LABEL_GAP = 6;
 const MONTH_LABEL_HEIGHT = 20;
 
+function parsePayload(payload: { weeks?: GithubCalendarWeek[]; total?: number }) {
+  if (!payload.weeks) return null;
+  const cells: string[] = [];
+  const counts: number[] = [];
+
+  payload.weeks.forEach((week) => {
+    week.contributionDays.forEach(({ contributionCount: c }) => {
+      counts.push(c);
+      cells.push(
+        c === 0
+          ? ""
+          : c <= 2
+            ? "l1"
+            : c <= 5
+              ? "l2"
+              : c <= 9
+                ? "l3"
+                : "l4",
+      );
+    });
+  });
+
+  let maxStreak = 0;
+  let currentStreak = 0;
+  for (const c of counts) {
+    currentStreak = c > 0 ? currentStreak + 1 : 0;
+    if (currentStreak > maxStreak) maxStreak = currentStreak;
+  }
+
+  return { cells, counts, commits: payload.total ?? 0, streak: maxStreak };
+}
+
 export default function GithubHeatmap() {
-  const [data, setData] = useState({
+  const cached = getCachedGithubData();
+  const parsedCache = cached ? parsePayload(cached) : null;
+
+  const [data, setData] = useState(() => parsedCache ?? {
     cells: Array(364).fill(""),
     counts: Array(364).fill(0),
     commits: 0,
     streak: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!parsedCache);
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
@@ -87,76 +123,14 @@ export default function GithubHeatmap() {
   } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // useEffect(() => {
-  //   // Generate mock data since /api/github doesn't exist yet, preserving theme styling
-  //   const mockCells = Array(364).fill('');
-  //   const mockCounts = Array(364).fill(0);
-  //   const LEVELS = ['', '', '', 'l1', 'l1', 'l2', 'l3', 'l4'];
-  //   let commits = 0;
-
-  //   for (let i = 0; i < 364; i++) {
-  //     const r = Math.random();
-  //     if (r > 0.6) {
-  //       const level = LEVELS[Math.floor(Math.random() * LEVELS.length)];
-  //       mockCells[i] = level;
-  //       if (level === 'l1') mockCounts[i] = 1 + Math.floor(Math.random() * 2);
-  //       if (level === 'l2') mockCounts[i] = 3 + Math.floor(Math.random() * 3);
-  //       if (level === 'l3') mockCounts[i] = 6 + Math.floor(Math.random() * 4);
-  //       if (level === 'l4') mockCounts[i] = 10 + Math.floor(Math.random() * 10);
-  //       commits += mockCounts[i];
-  //     }
-  //   }
-
-  //   // Calculate actual longest streak from mock data
-  //   let maxStreak = 0;
-  //   let currentStreak = 0;
-  //   for (let i = 0; i < 364; i++) {
-  //     if (mockCounts[i] > 0) {
-  //       currentStreak++;
-  //       if (currentStreak > maxStreak) maxStreak = currentStreak;
-  //     } else {
-  //       currentStreak = 0;
-  //     }
-  //   }
-
-  //   setData({ cells: mockCells, counts: mockCounts, commits: commits || 347, streak: maxStreak });
-  // }, []);
-
   useEffect(() => {
-    fetch("/api/sys/github")
-      .then((r) => r.json())
+    getSharedGithubData()
       .then((payload) => {
-        if (payload.error) return;
-        const cells: string[] = [];
-        const counts: number[] = [];
-
-        payload.weeks.forEach(
-          (week: { contributionDays: { contributionCount: number }[] }) => {
-            week.contributionDays.forEach(({ contributionCount: c }) => {
-              counts.push(c);
-              cells.push(
-                c === 0
-                  ? ""
-                  : c <= 2
-                    ? "l1"
-                    : c <= 5
-                      ? "l2"
-                      : c <= 9
-                        ? "l3"
-                        : "l4",
-              );
-            });
-          },
-        );
-
-        let maxStreak = 0,
-          currentStreak = 0;
-        for (const c of counts) {
-          currentStreak = c > 0 ? currentStreak + 1 : 0;
-          if (currentStreak > maxStreak) maxStreak = currentStreak;
+        if (payload.error || !payload.weeks) return;
+        const parsed = parsePayload(payload);
+        if (parsed) {
+          setData(parsed);
         }
-
-        setData({ cells, counts, commits: payload.total, streak: maxStreak });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -267,13 +241,7 @@ export default function GithubHeatmap() {
   };
 
   return (
-    <motion.div
-      key={loading ? "heatmap-skeleton" : "heatmap-loaded"}
-      initial={{ opacity: 0.35, filter: "blur(4px)" }}
-      animate={{ opacity: 1, filter: "blur(0px)" }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full relative mt-[8px]"
-    >
+    <div className="w-full relative mt-[8px]">
       <svg
         className={`block w-full h-auto transition-opacity duration-300 ${
           loading ? "opacity-35 animate-pulse" : "opacity-100"
@@ -368,6 +336,6 @@ export default function GithubHeatmap() {
           </span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

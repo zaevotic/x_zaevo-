@@ -42,7 +42,7 @@ export default function HomePage() {
         {/* Row 1 — 2 columns */}
         <div className="grid gap-[10px] grid-cols-1 xl:grid-cols-[1fr_1.6fr]">
           {/* Left Column: Technology Stack */}
-          <Panel style={{ flex: 1 }} delay={0.1}>
+          <Panel style={{ flex: 1 }} delay={0.08}>
             <PanelHead meta="stack.cfg">
               <Dagger /> ~/{" "}
               <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
@@ -78,7 +78,7 @@ export default function HomePage() {
           </Panel>
 
           {/* Middle Column: Hero panel */}
-          <Panel delay={0.2} className="flex flex-col h-full">
+          <Panel delay={0.16} className="flex flex-col h-full">
             <PanelHead meta="fastfetch · hero.md">
               <Dagger /> ~/{" "}
               <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
@@ -173,7 +173,7 @@ export default function HomePage() {
         {/* Row 2 — System Log and Featured Projects */}
         <div className="grid gap-[10px] grid-cols-1 xl:grid-cols-[1.6fr_1fr]">
           <div className="flex flex-col gap-[10px]">
-            <Panel delay={0.3}>
+            <Panel delay={0.24}>
               <PanelHead meta="github_heatmap.svg">
                 <Dagger /> ~/{" "}
                 <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
@@ -184,24 +184,24 @@ export default function HomePage() {
                 <GithubHeatmap />
               </PanelBody>
             </Panel>
-            <SystemLogPanel delay={0.4} />
+            <SystemLogPanel delay={0.32} />
           </div>
           <div className="hidden xl:block">
-            <FeaturedProjectsPanel delay={0.5} />
+            <FeaturedProjectsPanel delay={0.40} />
           </div>
         </div>
       </div>
 
       {/* RIGHT SIDEBAR: LEADERBOARD & WAKATIME */}
       <div className="flex flex-col gap-[10px]">
-        <LeaderboardPanel delay={0.6} />
+        <LeaderboardPanel delay={0.48} />
 
         {/* Wakatime */}
-        <WakaTimePanel delay={0.7} />
+        <WakaTimePanel delay={0.56} />
 
         {/* Featured Projects (Tablet & Mobile only) */}
         <div className="block xl:hidden">
-          <FeaturedProjectsPanel delay={0.8} />
+          <FeaturedProjectsPanel delay={0.64} />
         </div>
       </div>
     </div>

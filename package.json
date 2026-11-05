@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "new": "bun scripts/new-post.ts"
+    "new": "bun scripts/new-post.ts",
+    "visits": "bun scripts/set-visits.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.23",

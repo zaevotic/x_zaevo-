@@ -19,10 +19,14 @@ function getDate() {
   });
 }
 
+let cachedVisitCount: number | null = null;
+let cachedCommitHash: string | null = null;
+
 export default function StatusBar() {
   const pathname = usePathname();
-  const [visitCount, setVisitCount] = useState<number>(0);
+  const [visitCount, setVisitCount] = useState<number>(() => cachedVisitCount ?? 0);
   const [commitHash, setCommitHash] = useState<string>(() => {
+    if (cachedCommitHash) return cachedCommitHash;
     const baked = process.env.NEXT_PUBLIC_COMMIT_HASH;
     return baked && baked !== "-" ? baked.slice(0, 7) : "-";
   });
@@ -33,9 +37,13 @@ export default function StatusBar() {
     fetch("/api/sys/proxy")
       .then((res) => {
         const countHeader = res.headers.get("x-visit-count");
-        if (countHeader) setVisitCount(parseInt(countHeader, 10));
+        if (countHeader) {
+          const parsed = parseInt(countHeader, 10);
+          setVisitCount(parsed);
+          cachedVisitCount = parsed;
+        }
       })
-      .catch(() => setVisitCount(0));
+      .catch(() => {});
   }, []);
 
   // Fetch latest commit hash (lightweight endpoint)
@@ -44,7 +52,9 @@ export default function StatusBar() {
       .then((r) => r.json())
       .then((data) => {
         if (data?.hash && data.hash !== "-") {
-          setCommitHash(data.hash.slice(0, 7));
+          const h = data.hash.slice(0, 7);
+          setCommitHash(h);
+          cachedCommitHash = h;
         }
       })
       .catch(() => {});

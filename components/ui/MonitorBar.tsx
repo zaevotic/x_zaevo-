@@ -28,16 +28,20 @@ export default function MonitorBar() {
 
   return (
     <header
-      className="flex items-center justify-between px-[16px] h-[36px] border-b sticky top-0 z-50 flex-shrink-0"
+      className="flex items-center justify-between px-[8px] sm:px-[16px] h-[36px] border-b sticky top-0 z-50 flex-shrink-0"
       style={{
         borderColor: "var(--border)",
         background: "var(--bg1)",
       }}
     >
       {/* ── Left ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-[12px] flex-1">
+      <div className="flex items-center gap-[6px] sm:gap-[12px] min-w-0">
         {/* Brand */}
-        <div className="flex items-center gap-[8px]">
+        <Link
+          href="/home"
+          className="flex items-center gap-[6px] shrink-0 hover:opacity-85 transition-opacity"
+          title="zaevo · home"
+        >
           <ZaevoLogo size={16} className="flex-shrink-0" />
           <span
             className="hidden sm:block text-[13px] font-bold tracking-[0.08em]"
@@ -45,7 +49,7 @@ export default function MonitorBar() {
           >
             zaevo
           </span>
-        </div>
+        </Link>
 
         {/* Separator */}
         <span className="hidden sm:block text-[13px]" style={{ color: "var(--border2)" }}>
@@ -53,14 +57,14 @@ export default function MonitorBar() {
         </span>
 
         {/* Workspace tabs */}
-        <nav className="flex gap-[4px]">
+        <nav className="flex items-center gap-[2px] sm:gap-[4px] shrink-0">
           {tabs.map(({ num, label, href }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
                 href={href}
-                className="relative text-[13px] px-[6px] sm:px-[10px] py-[4px] rounded-[4px] transition-colors duration-100 tracking-[0.02em]"
+                className="relative text-[11px] sm:text-[13px] px-[6px] sm:px-[10px] py-[3px] sm:py-[4px] rounded-[4px] transition-colors duration-100 tracking-[0.02em] shrink-0"
                 style={{
                   color: active ? "var(--red)" : "var(--text3)",
                   textDecoration: "none",
@@ -80,8 +84,9 @@ export default function MonitorBar() {
                     transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   />
                 )}
-                <span className="relative z-10">
-                  <span className="hidden sm:inline">{num}:</span>{label}
+                <span className="relative z-10 flex items-center">
+                  <span className="hidden sm:inline">{num}:</span>
+                  <span>{label}</span>
                 </span>
               </Link>
             );
@@ -90,15 +95,15 @@ export default function MonitorBar() {
       </div>
 
       {/* ── Right ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-[12px]">
+      <div className="flex items-center gap-[6px] sm:gap-[12px] shrink-0">
         {isLoaded && (
-          <div className="flex items-center gap-[8px]">
+          <div className="flex items-center gap-[6px] sm:gap-[8px]">
             {isSignedIn && user ? (
-              <div className="flex items-center gap-[8px]">
+              <div className="flex items-center gap-[6px] sm:gap-[8px]">
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="hidden sm:inline-flex items-center gap-[4px] px-[6px] py-[2px] text-[10px] uppercase tracking-[0.8px] border transition-colors"
+                    className="inline-flex items-center gap-[3px] px-[4px] sm:px-[6px] py-[1px] sm:py-[2px] text-[9px] sm:text-[10px] uppercase tracking-[0.8px] border transition-colors shrink-0"
                     style={{
                       color: "var(--amber)",
                       borderColor: "var(--amber-dim)",
@@ -107,7 +112,7 @@ export default function MonitorBar() {
                     title="Root Admin Workspace"
                   >
                     <Shield size={10} />
-                    <span>root</span>
+                    <span className="hidden sm:inline">root</span>
                   </Link>
                 )}
                 <span
@@ -116,7 +121,7 @@ export default function MonitorBar() {
                 >
                   @{user.username || user.firstName || "operator"}
                 </span>
-                <div className="flex items-center scale-75 origin-right">
+                <div className="flex items-center scale-90 sm:scale-75 origin-right shrink-0">
                   <UserButton />
                 </div>
               </div>
@@ -124,14 +129,15 @@ export default function MonitorBar() {
               <SignInButton mode="modal" fallbackRedirectUrl="/home">
                 <button
                   type="button"
-                  className="px-[8px] py-[2px] text-[11px] tracking-[0.5px] border cursor-pointer transition-colors hover:border-[var(--red-dim)] hover:text-[var(--red-ember)]"
+                  className="px-[6px] sm:px-[8px] py-[2px] text-[10px] sm:text-[11px] tracking-[0.5px] border cursor-pointer transition-colors hover:border-[var(--red-dim)] hover:text-[var(--red-ember)] shrink-0"
                   style={{
                     color: "var(--text2)",
                     borderColor: "var(--border2)",
                     background: "var(--bg2)",
                   }}
                 >
-                  [auth: login]
+                  <span className="hidden sm:inline">[auth: login]</span>
+                  <span className="sm:hidden">[login]</span>
                 </button>
               </SignInButton>
             )}
@@ -158,6 +164,7 @@ export default function MonitorBar() {
 
 function Clock() {
   const [clock, setClock] = useState("00:00:00");
+  const [clockShort, setClockShort] = useState("00:00");
 
   useEffect(() => {
     const tick = () => {
@@ -166,6 +173,7 @@ function Clock() {
       const mm = String(d.getMinutes()).padStart(2, "0");
       const ss = String(d.getSeconds()).padStart(2, "0");
       setClock(`${hh}:${mm}:${ss}`);
+      setClockShort(`${hh}:${mm}`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -174,10 +182,11 @@ function Clock() {
 
   return (
     <span
-      className="text-[13px] tracking-[0.05em] tabular-nums"
+      className="text-[11px] sm:text-[13px] tracking-[0.05em] tabular-nums shrink-0"
       style={{ color: "var(--text3)" }}
     >
-      {clock}
+      <span className="hidden sm:inline">{clock}</span>
+      <span className="sm:hidden">{clockShort}</span>
     </span>
   );
 }

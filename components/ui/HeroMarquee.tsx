@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useSyncExternalStore } from "react";
+import React, { useMemo, useState, useEffect, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { generateMarqueeSequence } from "@/lib/marquee";
+import { getLatestCommitHash, getSharedGithubData } from "@/lib/github-client";
 
 const emptySubscribe = () => () => {};
 
@@ -13,13 +14,27 @@ export default function HeroMarquee() {
     () => false,
   );
 
+  const [commitHash, setCommitHash] = useState(() => getLatestCommitHash());
+
+  useEffect(() => {
+    let active = true;
+    getSharedGithubData().then((data) => {
+      if (active && data?.commits?.[0]?.id) {
+        setCommitHash(data.commits[0].id.slice(0, 7));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const strip1 = useMemo(
-    () => (mounted ? generateMarqueeSequence(10) : []),
-    [mounted],
+    () => (mounted ? generateMarqueeSequence(10, commitHash) : []),
+    [mounted, commitHash],
   );
   const strip2 = useMemo(
-    () => (mounted ? generateMarqueeSequence(10) : []),
-    [mounted],
+    () => (mounted ? generateMarqueeSequence(10, commitHash) : []),
+    [mounted, commitHash],
   );
 
   const content1 = useMemo(() => [...strip1, ...strip1].map((item, i) => (

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface KeyDef {
   code: string;
   label: string;
-  kind?: string;
+  kind?: "fn" | "wide" | "wider" | "widest";
 }
 
 interface TTypeTelemetry {
@@ -16,7 +16,99 @@ interface TTypeTelemetry {
   active?: boolean;
 }
 
+const KEY_ROWS: KeyDef[][] = [
+  [
+    { code: "Escape", label: "Esc", kind: "fn" },
+    { code: "F1", label: "F1", kind: "fn" },
+    { code: "F2", label: "F2", kind: "fn" },
+    { code: "F3", label: "F3", kind: "fn" },
+    { code: "F4", label: "F4", kind: "fn" },
+    { code: "F5", label: "F5", kind: "fn" },
+    { code: "F6", label: "F6", kind: "fn" },
+    { code: "F7", label: "F7", kind: "fn" },
+    { code: "F8", label: "F8", kind: "fn" },
+    { code: "F9", label: "F9", kind: "fn" },
+    { code: "F10", label: "F10", kind: "fn" },
+    { code: "F11", label: "F11", kind: "fn" },
+    { code: "F12", label: "F12", kind: "fn" },
+  ],
+  [
+    { code: "Backquote", label: "`" },
+    { code: "Digit1", label: "1" },
+    { code: "Digit2", label: "2" },
+    { code: "Digit3", label: "3" },
+    { code: "Digit4", label: "4" },
+    { code: "Digit5", label: "5" },
+    { code: "Digit6", label: "6" },
+    { code: "Digit7", label: "7" },
+    { code: "Digit8", label: "8" },
+    { code: "Digit9", label: "9" },
+    { code: "Digit0", label: "0" },
+    { code: "Minus", label: "-" },
+    { code: "Equal", label: "=" },
+    { code: "Backspace", label: "⌫", kind: "wide" },
+  ],
+  [
+    { code: "Tab", label: "Tab", kind: "wide" },
+    { code: "KeyQ", label: "q" },
+    { code: "KeyW", label: "w" },
+    { code: "KeyE", label: "e" },
+    { code: "KeyR", label: "r" },
+    { code: "KeyT", label: "t" },
+    { code: "KeyY", label: "y" },
+    { code: "KeyU", label: "u" },
+    { code: "KeyI", label: "i" },
+    { code: "KeyO", label: "o" },
+    { code: "KeyP", label: "p" },
+    { code: "BracketLeft", label: "[" },
+    { code: "BracketRight", label: "]" },
+    { code: "Backslash", label: "\\" },
+  ],
+  [
+    { code: "CapsLock", label: "Caps", kind: "wider" },
+    { code: "KeyA", label: "a" },
+    { code: "KeyS", label: "s" },
+    { code: "KeyD", label: "d" },
+    { code: "KeyF", label: "f" },
+    { code: "KeyG", label: "g" },
+    { code: "KeyH", label: "h" },
+    { code: "KeyJ", label: "j" },
+    { code: "KeyK", label: "k" },
+    { code: "KeyL", label: "l" },
+    { code: "Semicolon", label: ";" },
+    { code: "Quote", label: "'" },
+    { code: "Enter", label: "↵", kind: "wider" },
+  ],
+  [
+    { code: "ShiftLeft", label: "⇧", kind: "wider" },
+    { code: "KeyZ", label: "z" },
+    { code: "KeyX", label: "x" },
+    { code: "KeyC", label: "c" },
+    { code: "KeyV", label: "v" },
+    { code: "KeyB", label: "b" },
+    { code: "KeyN", label: "n" },
+    { code: "KeyM", label: "m" },
+    { code: "Comma", label: "," },
+    { code: "Period", label: "." },
+    { code: "Slash", label: "/" },
+    { code: "ShiftRight", label: "⇧", kind: "wider" },
+  ],
+  [
+    { code: "ControlLeft", label: "Ctrl", kind: "wide" },
+    { code: "MetaLeft", label: "Super" },
+    { code: "AltLeft", label: "Alt", kind: "wide" },
+    { code: "Space", label: "", kind: "widest" },
+    { code: "AltRight", label: "Alt", kind: "wide" },
+    { code: "ControlRight", label: "Ctrl", kind: "wide" },
+  ],
+];
+
+const NATURAL_WIDTH = 460;
+const NATURAL_HEIGHT = 205;
+
 export default function KeyboardPanel() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
   const [activeCodes, setActiveCodes] = useState<Set<string>>(new Set());
   const [errorCodes, setErrorCodes] = useState<Set<string>>(new Set());
   const [telemetry, setTelemetry] = useState<TTypeTelemetry>({
@@ -28,19 +120,48 @@ export default function KeyboardPanel() {
   });
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateScale = () => {
+      const rect = el.getBoundingClientRect();
+      const availW = rect.width;
+      const availH = rect.height;
+      if (availW <= 0) return;
+
+      const scaleX = availW / NATURAL_WIDTH;
+      const scaleY = availH > 0 ? availH / NATURAL_HEIGHT : 1;
+      const nextScale = Math.min(1.05, Math.min(scaleX, scaleY));
+      setScale(Math.max(0.35, nextScale));
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(el);
+    window.addEventListener("resize", updateScale);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateScale);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const code = e.code === "MetaRight" ? "MetaLeft" : e.code;
       setActiveCodes((prev) => {
-        if (prev.has(e.code)) return prev;
+        if (prev.has(code)) return prev;
         const next = new Set(prev);
-        next.add(e.code);
+        next.add(code);
         return next;
       });
     };
     const handleKeyUp = (e: KeyboardEvent) => {
+      const code = e.code === "MetaRight" ? "MetaLeft" : e.code;
       setActiveCodes((prev) => {
-        if (!prev.has(e.code)) return prev;
+        if (!prev.has(code)) return prev;
         const next = new Set(prev);
-        next.delete(e.code);
+        next.delete(code);
         return next;
       });
     };
@@ -109,96 +230,26 @@ export default function KeyboardPanel() {
     };
   }, []);
 
-  const keyRows = [
-    [
-      { code: "Escape", label: "Esc", kind: "fn" },
-      { code: "F1", label: "F1", kind: "fn" },
-      { code: "F2", label: "F2", kind: "fn" },
-      { code: "F3", label: "F3", kind: "fn" },
-      { code: "F4", label: "F4", kind: "fn" },
-      { code: "F5", label: "F5", kind: "fn" },
-      { code: "F6", label: "F6", kind: "fn" },
-      { code: "F7", label: "F7", kind: "fn" },
-      { code: "F8", label: "F8", kind: "fn" },
-      { code: "F9", label: "F9", kind: "fn" },
-      { code: "F10", label: "F10", kind: "fn" },
-      { code: "F11", label: "F11", kind: "fn" },
-      { code: "F12", label: "F12", kind: "fn" },
-    ],
-    [
-      { code: "Backquote", label: "`" },
-      { code: "Digit1", label: "1" },
-      { code: "Digit2", label: "2" },
-      { code: "Digit3", label: "3" },
-      { code: "Digit4", label: "4" },
-      { code: "Digit5", label: "5" },
-      { code: "Digit6", label: "6" },
-      { code: "Digit7", label: "7" },
-      { code: "Digit8", label: "8" },
-      { code: "Digit9", label: "9" },
-      { code: "Digit0", label: "0" },
-      { code: "Minus", label: "-" },
-      { code: "Equal", label: "=" },
-      { code: "Backspace", label: "⌫", kind: "wide" },
-    ],
-    [
-      { code: "Tab", label: "Tab", kind: "wide" },
-      { code: "KeyQ", label: "q" },
-      { code: "KeyW", label: "w" },
-      { code: "KeyE", label: "e" },
-      { code: "KeyR", label: "r" },
-      { code: "KeyT", label: "t" },
-      { code: "KeyY", label: "y" },
-      { code: "KeyU", label: "u" },
-      { code: "KeyI", label: "i" },
-      { code: "KeyO", label: "o" },
-      { code: "KeyP", label: "p" },
-      { code: "BracketLeft", label: "[" },
-      { code: "BracketRight", label: "]" },
-      { code: "Backslash", label: "\\" },
-    ],
-    [
-      { code: "CapsLock", label: "Caps", kind: "wider" },
-      { code: "KeyA", label: "a" },
-      { code: "KeyS", label: "s" },
-      { code: "KeyD", label: "d" },
-      { code: "KeyF", label: "f" },
-      { code: "KeyG", label: "g" },
-      { code: "KeyH", label: "h" },
-      { code: "KeyJ", label: "j" },
-      { code: "KeyK", label: "k" },
-      { code: "KeyL", label: "l" },
-      { code: "Semicolon", label: ";" },
-      { code: "Quote", label: "'\''" },
-      { code: "Enter", label: "↵", kind: "wider" },
-    ],
-    [
-      { code: "ShiftLeft", label: "⇧", kind: "wider" },
-      { code: "KeyZ", label: "z" },
-      { code: "KeyX", label: "x" },
-      { code: "KeyC", label: "c" },
-      { code: "KeyV", label: "v" },
-      { code: "KeyB", label: "b" },
-      { code: "KeyN", label: "n" },
-      { code: "KeyM", label: "m" },
-      { code: "Comma", label: "," },
-      { code: "Period", label: "." },
-      { code: "Slash", label: "/" },
-      { code: "ShiftRight", label: "⇧", kind: "wider" },
-    ],
-    [
-      { code: "ControlLeft", label: "Ctrl", kind: "wide" },
-      { code: "MetaLeft", label: "Super" },
-      { code: "AltLeft", label: "Alt", kind: "wide" },
-      { code: "Space", label: "", kind: "widest" },
-      { code: "AltRight", label: "Alt", kind: "wide" },
-      { code: "ControlRight", label: "Ctrl", kind: "wide" },
-    ],
-  ];
+  const handlePointerDownKey = (code: string) => {
+    setActiveCodes((prev) => {
+      const next = new Set(prev);
+      next.add(code);
+      return next;
+    });
+  };
+
+  const handlePointerUpKey = (code: string) => {
+    setActiveCodes((prev) => {
+      if (!prev.has(code)) return prev;
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
+  };
 
   const getKeyClasses = (key: KeyDef) => {
     let classes =
-      "flex items-center justify-center border border-b-2 rounded-[3px] text-[9px] whitespace-nowrap select-none transition-all duration-75 ";
+      "flex items-center justify-center border border-b-2 rounded-[3px] text-[9px] whitespace-nowrap select-none transition-all duration-75 cursor-default ";
 
     if (key.kind === "fn")
       classes += "h-[22px] min-w-[24px] text-[9px] px-[2px] ";
@@ -219,41 +270,83 @@ export default function KeyboardPanel() {
         "bg-[var(--bg3)] border-[var(--red-dim)] border-b-[var(--border2)] text-[var(--text)]";
     } else {
       classes +=
-        "bg-[var(--bg2)] border-[var(--border2)] border-b-[var(--border)] text-[var(--text3)]";
+        "bg-[var(--bg2)] border-[var(--border2)] border-b-[var(--border)] text-[var(--text3)] hover:text-[var(--text2)] hover:border-[var(--border)]";
     }
 
     return classes;
   };
 
   return (
-    <div className="flex flex-col h-full items-center justify-center">
-      <div className="mb-[12px]">
-        {keyRows.map((row, rIdx) => (
-          <div key={rIdx} className="flex gap-[3px] mb-[3px] justify-center">
-            {row.map((k) => (
-              <div key={k.code} className={getKeyClasses(k)}>
-                {k.label}
+    <div
+      ref={containerRef}
+      className="w-full h-full min-h-[160px] xl:min-h-0 flex items-center justify-center min-h-0 min-w-0 overflow-hidden font-mono"
+    >
+      <div
+        style={{
+          width: NATURAL_WIDTH * scale,
+          height: NATURAL_HEIGHT * scale,
+        }}
+        className="relative shrink-0 flex items-center justify-center overflow-visible"
+      >
+        <div
+          style={{
+            width: NATURAL_WIDTH,
+            height: NATURAL_HEIGHT,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+          className="absolute top-0 left-0 flex flex-col items-center justify-center select-none"
+        >
+          {/* Keyboard Keys Matrix */}
+          <div className="mb-[10px]">
+            {KEY_ROWS.map((row, rIdx) => (
+              <div
+                key={rIdx}
+                className="flex gap-[3px] mb-[3px] justify-center"
+              >
+                {row.map((k) => (
+                  <div
+                    key={k.code}
+                    className={getKeyClasses(k)}
+                    onPointerDown={() => handlePointerDownKey(k.code)}
+                    onPointerUp={() => handlePointerUpKey(k.code)}
+                    onPointerLeave={() => handlePointerUpKey(k.code)}
+                  >
+                    {k.label}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-[10px] text-[9px] tracking-[.1em] mt-[10px]" style={{ color: "var(--text3)" }}>
-        <span>LIVE INPUT FEED</span>
-        {telemetry.active && (
-          <>
-            <span>·</span>
-            <span style={{ color: "var(--red-ember)" }}>{telemetry.wpm ?? 0} WPM</span>
-            <span>·</span>
-            <span style={{ color: "var(--green)" }}>{telemetry.acc ?? 100}% ACC</span>
-          </>
-        )}
-        {telemetry.lastKey && (
-          <>
-            <span>·</span>
-            <span style={{ color: "var(--amber)" }}>KEY [{telemetry.lastKey}]</span>
-          </>
-        )}
+
+          {/* Telemetry Status Line */}
+          <div
+            className="flex items-center gap-[8px] text-[9px] tracking-[.1em] mt-[4px] shrink-0"
+            style={{ color: "var(--text3)" }}
+          >
+            <span>LIVE INPUT FEED</span>
+            {telemetry.active && (
+              <>
+                <span>·</span>
+                <span style={{ color: "var(--red-ember)" }}>
+                  {telemetry.wpm ?? 0} WPM
+                </span>
+                <span>·</span>
+                <span style={{ color: "var(--green)" }}>
+                  {telemetry.acc ?? 100}% ACC
+                </span>
+              </>
+            )}
+            {telemetry.lastKey && (
+              <>
+                <span>·</span>
+                <span style={{ color: "var(--amber)" }}>
+                  KEY [{telemetry.lastKey}]
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

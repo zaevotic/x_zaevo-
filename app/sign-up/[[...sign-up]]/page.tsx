@@ -9,7 +9,7 @@ export default function SignUpPage() {
       <div className="mb-[16px] flex items-center gap-[8px]">
         <ZaevoLogo size={20} />
         <Link
-          href="/home"
+          href="/"
           className="text-[13px] font-bold tracking-[0.08em] hover:underline"
           style={{ color: "var(--red)" }}
         >

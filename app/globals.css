@@ -128,4 +128,15 @@ body {
   50%       { opacity: 0; }
 }
 
+/* ── Single column & mobile landscape responsive hide ────── */
+@media (max-width: 767px), (orientation: landscape) and (max-height: 550px) {
+  .hide-single-col,
+  .panel.hide-single-col,
+  div.hide-single-col {
+    display: none !important;
+  }
+}
+
+
+
 

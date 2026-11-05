@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const WS_MAP: Record<string, string> = {
+  "/": "1:home",
   "/home": "1:home",
   "/journal": "2:journal",
   "/term": "3:term",

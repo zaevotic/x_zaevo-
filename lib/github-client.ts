@@ -41,6 +41,20 @@ export function getCachedGithubData(): GithubApiResponse | null {
   return cachedData;
 }
 
+export function getLatestCommitHash(): string {
+  if (cachedData?.commits?.[0]?.id) {
+    return cachedData.commits[0].id.slice(0, 7);
+  }
+  const envHash =
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_COMMIT_HASH || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
+      : null;
+  if (envHash && envHash !== "-") {
+    return envHash.slice(0, 7);
+  }
+  return "HEAD";
+}
+
 export async function getSharedGithubData(): Promise<GithubApiResponse> {
   if (cachedData) {
     return cachedData;

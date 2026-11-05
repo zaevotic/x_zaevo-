@@ -464,15 +464,15 @@ export default function TermPage() {
         </PanelBody>
       </Panel>
 
-      {/* ── JOURNAL LOG PANEL (bottom-left) ──────────────────────── */}
+      {/* ── JOURNALCTL PANEL (bottom-left) ──────────────────────── */}
       <Panel
-        className="md:col-span-2 xl:col-[1/5] xl:row-[9/11]"
+        className="hide-single-col hidden md:flex md:col-span-2 xl:col-[1/5] xl:row-[9/11]"
         delay={0.40}
       >
         <PanelHead meta="journalctl -f · sys.log">
           <Dagger /> ~/{" "}
           <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
-            JOURNAL_LOG
+            JOURNALCTL
           </b>
         </PanelHead>
         <PanelBody className="flex-1 overflow-hidden flex flex-col min-h-0" style={{ padding: "10px 12px" }}>
@@ -488,7 +488,10 @@ export default function TermPage() {
             KEYBOARD
           </b>
         </PanelHead>
-        <PanelBody style={{ padding: "10px 12px" }}>
+        <PanelBody
+          className="flex flex-col h-full overflow-hidden !p-[6px] sm:!p-[8px_10px] items-center justify-center"
+          style={{ minHeight: 0, fontFamily: "var(--mono)" }}
+        >
           <KeyboardPanel />
         </PanelBody>
       </Panel>
@@ -525,7 +528,7 @@ function JournalLog({ entries: initialEntries }: { entries: LogEntry[] }) {
 
   useEffect(() => {
     const id = setInterval(() => {
-      const endpoints = ["/api/sys/spotify", "/api/sys/github", "/api/sys/wakatime", "/home", "/term", "/signal"];
+      const endpoints = ["/api/sys/spotify", "/api/sys/github", "/api/sys/wakatime", "/", "/term", "/signal"];
       const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
       const ms = Math.floor(Math.random() * 800) + 15;
       const appMs = ms - Math.floor(Math.random() * 5);

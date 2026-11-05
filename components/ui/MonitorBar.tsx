@@ -9,7 +9,7 @@ import { Shield } from "lucide-react";
 import ZaevoLogo from "@/components/ui/ZaevoLogo";
 
 const BASE_TABS = [
-  { num: "1", label: "home", href: "/home" },
+  { num: "1", label: "home", href: "/" },
   { num: "2", label: "journal", href: "/journal" },
   { num: "3", label: "term", href: "/term" },
   { num: "4", label: "signal", href: "/signal" },
@@ -38,7 +38,7 @@ export default function MonitorBar() {
       <div className="flex items-center gap-[6px] sm:gap-[12px] min-w-0">
         {/* Brand */}
         <Link
-          href="/home"
+          href="/"
           className="flex items-center gap-[6px] shrink-0 hover:opacity-85 transition-opacity"
           title="zaevo · home"
         >
@@ -59,7 +59,10 @@ export default function MonitorBar() {
         {/* Workspace tabs */}
         <nav className="flex items-center gap-[2px] sm:gap-[4px] shrink-0">
           {tabs.map(({ num, label, href }) => {
-            const active = pathname === href || pathname.startsWith(href + "/");
+            const active =
+              href === "/"
+                ? pathname === "/" || pathname === "/home"
+                : pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
@@ -126,7 +129,7 @@ export default function MonitorBar() {
                 </div>
               </div>
             ) : (
-              <SignInButton mode="modal" fallbackRedirectUrl="/home">
+              <SignInButton mode="modal" fallbackRedirectUrl="/">
                 <button
                   type="button"
                   className="px-[6px] sm:px-[8px] py-[2px] text-[10px] sm:text-[11px] tracking-[0.5px] border cursor-pointer transition-colors hover:border-[var(--red-dim)] hover:text-[var(--red-ember)] shrink-0"

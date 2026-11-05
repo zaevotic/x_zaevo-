@@ -1,3 +1,5 @@
+import { getLatestCommitHash } from "@/lib/github-client";
+
 export type MarqueeCategory = "meta" | "mood" | "system" | "interactive";
 
 export interface MarqueeStatement {
@@ -5,39 +7,46 @@ export interface MarqueeStatement {
   category: MarqueeCategory;
 }
 
-export const MARQUEE_DB: MarqueeStatement[] = [
-  // Meta
-  {
-    text: "> this page has been rebuilt more times than I can count",
-    category: "meta",
-  },
-  // { text: "> you're viewing commit a3f9c12", category: "meta" },
-  { text: "> yes, this greentext is rotating in real time", category: "meta" },
-  { text: "> compiling personality... done", category: "meta" },
-  { text: "> if you're reading this, hi", category: "meta" },
-  { text: "> don't stop here, there's more", category: "meta" },
-  {
-    text: "> this line was AI-assisted. the bug below wasn't",
-    category: "meta",
-  },
+export function getMarqueeDb(commitHash?: string): MarqueeStatement[] {
+  const hash = commitHash || getLatestCommitHash();
 
-  // Mood
-  { text: "> mood: shipping", category: "mood" },
-  { text: "> mood: three coffees deep", category: "mood" },
-  { text: "> mood: cautiously optimistic about the build", category: "mood" },
-  { text: "> mood: one more feature then i'll stop", category: "mood" },
-  { text: "> my desperation knows no bounds", category: "mood" },
+  return [
+    // Meta
+    {
+      text: "> this page has been rebuilt more times than I can count",
+      category: "meta",
+    },
+    { text: `> you're viewing commit ${hash}`, category: "meta" },
+    { text: "> yes, this greentext is rotating in real time", category: "meta" },
+    { text: "> compiling personality... done", category: "meta" },
+    { text: "> if you're reading this, hi", category: "meta" },
+    { text: "> don't stop here, there's more", category: "meta" },
+    {
+      text: "> this line was AI-assisted. the bug below wasn't",
+      category: "meta",
+    },
 
-  // System
-  { text: "> bun run dev has been running since Tuesday", category: "system" },
-  { text: "> works on my machine (OMEN-erde)", category: "system" },
-  { text: "> TODO: fix the todo list", category: "system" },
+    // Mood
+    { text: "> mood: shipping", category: "mood" },
+    { text: "> mood: three coffees deep", category: "mood" },
+    { text: "> mood: cautiously optimistic about the build", category: "mood" },
+    { text: "> mood: one more feature then i'll stop", category: "mood" },
+    { text: "> mood: my desperation knows no bounds", category: "mood" },
 
-  // Interactive
-  { text: "> nice cursor you've got there", category: "interactive" },
-  { text: "> yes I see you inspecting element", category: "interactive" },
-  { text: "> hover a bit longer, I dare you", category: "interactive" },
-];
+    // System
+    { text: "> bun run dev has been running since Wednesday", category: "system" },
+    { text: "> works on my machine (OMEN-erde)", category: "system" },
+    { text: "> TODO: fix the todo list", category: "system" },
+
+    // Interactive
+    { text: "> nice cursor you've got there", category: "interactive" },
+    { text: "> yes I see you inspecting element", category: "interactive" },
+    { text: "> hover a bit longer, I dare you", category: "interactive" },
+    { text: "> why is everyone using arch btw... what is arch btw...", category: "interactive" },
+  ];
+}
+
+export const MARQUEE_DB: MarqueeStatement[] = getMarqueeDb();
 
 export const PALETTE = [
   "var(--text)",
@@ -59,17 +68,18 @@ export interface MarqueeSequenceItem {
  */
 export function generateMarqueeSequence(
   length: number = 10,
+  commitHash?: string,
 ): MarqueeSequenceItem[] {
   const sequence: MarqueeSequenceItem[] = [];
   let lastCategory: MarqueeCategory | null = null;
   let lastColor: string | null = null;
 
   // Clone the DB so we can consume items to prevent exact text repeats in the same strip
-  let available = [...MARQUEE_DB];
+  let available = [...getMarqueeDb(commitHash)];
 
   for (let i = 0; i < length; i++) {
     if (available.length === 0) {
-      available = [...MARQUEE_DB]; // refill if we exhausted the pool
+      available = [...getMarqueeDb(commitHash)]; // refill if we exhausted the pool
     }
 
     // Try to pick an item from a DIFFERENT category than the last one

@@ -47,7 +47,7 @@ export default function LeaderboardPanel({
   compact = false,
   hideFooter = false,
   visibleRows: customVisibleRows,
-  fallbackRedirectUrl = "/home",
+  fallbackRedirectUrl = "/",
 }: LeaderboardPanelProps) {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();

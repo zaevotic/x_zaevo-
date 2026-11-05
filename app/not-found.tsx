@@ -115,7 +115,7 @@ export default function NotFound() {
             >
               <div className="flex items-center gap-[10px]">
                 <Link
-                  href="/home"
+                  href="/"
                   className="inline-flex items-center gap-[8px] px-[16px] py-[8px] text-[11px] tracking-[1px] uppercase font-bold border cursor-pointer transition-colors no-underline hover:bg-[var(--red-hover-tint)]"
                   style={{
                     borderColor: "var(--red)",
@@ -125,7 +125,7 @@ export default function NotFound() {
                   }}
                 >
                   <ArrowLeft size={12} />
-                  [~] cd /home
+                  [~] cd /
                 </Link>
 
                 <Link

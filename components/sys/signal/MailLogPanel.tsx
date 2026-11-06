@@ -9,7 +9,7 @@ import React, {
   useCallback,
   useSyncExternalStore,
 } from "react";
-import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
+import Panel, { PanelHead, Dagger } from "@/components/ui/Panel";
 import { ChevronRight, ChevronDown } from "lucide-react";
 
 export type MailLogLevel = "OK" | "INF" | "SYS" | "WRN" | "ERR";
@@ -88,7 +88,7 @@ const STATIC_INIT: MailLogEntry[] = [
   },
 ];
 
-const MAX_LOG_LINES = 18;
+const MAX_LOG_LINES = 10;
 
 const MailLogPanel = forwardRef<MailLogHandle, { delay?: number }>(
   ({ delay = 0.4 }, ref) => {
@@ -207,7 +207,7 @@ const MailLogPanel = forwardRef<MailLogHandle, { delay?: number }>(
     };
 
     return (
-      <Panel delay={delay} className="flex flex-col h-full min-h-[360px]">
+      <Panel delay={delay} className="flex flex-col h-full min-h-0 overflow-hidden">
         <PanelHead
           meta={
             <span className="flex items-center gap-[6px]">
@@ -221,140 +221,136 @@ const MailLogPanel = forwardRef<MailLogHandle, { delay?: number }>(
         </PanelHead>
 
         {/* Scrollable logs area */}
-        <PanelBody
-          className="flex-1 overflow-y-auto flex flex-col gap-[5px] p-[10px_12px] min-h-0"
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto flex flex-col gap-[5px] p-[10px_12px] min-h-0 z-10"
           style={{ fontFamily: "var(--mono)" }}
         >
-          <div
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto flex flex-col gap-[5px] min-h-0"
-          >
-            {entries.map((log) => {
-              const hasDetails = Boolean(
-                log.details && Object.keys(log.details).length > 0
-              );
-              const isExpanded = expandedId === log.id;
+          {entries.map((log) => {
+            const hasDetails = Boolean(
+              log.details && Object.keys(log.details).length > 0
+            );
+            const isExpanded = expandedId === log.id;
 
-              return (
-                <div key={log.id} className="flex flex-col min-w-0">
-                  <div
-                    onClick={hasDetails ? () => toggleExpand(log.id) : undefined}
-                    className={`flex items-start gap-[6px] text-[10px] leading-[1.6] min-w-0 rounded-xs transition-colors ${
-                      hasDetails
-                        ? "cursor-pointer hover:bg-[var(--red-hover-tint)] group px-[3px] -mx-[3px]"
-                        : "px-[3px] -mx-[3px]"
-                    }`}
+            return (
+              <div key={log.id} className="flex flex-col min-w-0">
+                <div
+                  onClick={hasDetails ? () => toggleExpand(log.id) : undefined}
+                  className={`flex items-start gap-[6px] text-[10px] leading-[1.6] min-w-0 rounded-xs transition-colors ${
+                    hasDetails
+                      ? "cursor-pointer hover:bg-[var(--red-hover-tint)] group px-[3px] -mx-[3px]"
+                      : "px-[3px] -mx-[3px]"
+                  }`}
+                >
+                  <span
+                    style={{ color: "var(--text3)", flexShrink: 0 }}
+                    className="tabular-nums"
                   >
+                    {log.time}
+                  </span>
+                  <span
+                    style={{
+                      width: 24,
+                      flexShrink: 0,
+                      color: LEVEL_COLORS[log.status],
+                      fontWeight: 600,
+                    }}
+                  >
+                    {log.status}
+                  </span>
+                  <span
+                    className="truncate flex-1 min-w-0"
+                    style={{ color: "var(--text2)" }}
+                    title={log.msg}
+                  >
+                    {log.msg}
+                  </span>
+                  {hasDetails && (
                     <span
-                      style={{ color: "var(--text3)", flexShrink: 0 }}
-                      className="tabular-nums"
+                      className="text-[9px] shrink-0 transition-transform pt-[3px]"
+                      style={{ color: "var(--text3)" }}
                     >
-                      {log.time}
+                      {isExpanded ? (
+                        <ChevronDown size={10} />
+                      ) : (
+                        <ChevronRight size={10} />
+                      )}
                     </span>
-                    <span
-                      style={{
-                        width: 24,
-                        flexShrink: 0,
-                        color: LEVEL_COLORS[log.status],
-                        fontWeight: 600,
-                      }}
-                    >
-                      {log.status}
-                    </span>
-                    <span
-                      className="truncate flex-1 min-w-0"
-                      style={{ color: "var(--text2)" }}
-                      title={log.msg}
-                    >
-                      {log.msg}
-                    </span>
-                    {hasDetails && (
-                      <span
-                        className="text-[9px] shrink-0 transition-transform pt-[3px]"
-                        style={{ color: "var(--text3)" }}
-                      >
-                        {isExpanded ? (
-                          <ChevronDown size={10} />
-                        ) : (
-                          <ChevronRight size={10} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Expandable Tree Details */}
-                  {hasDetails && isExpanded && log.details && (
-                    <div
-                      className="flex flex-col ml-[28px] pl-[6px] border-l my-[2px] text-[9px] leading-[1.5]"
-                      style={{
-                        borderColor: "var(--border2)",
-                        color: "var(--text3)",
-                      }}
-                    >
-                      {Object.entries(log.details).map(([key, val], idx, arr) => {
-                        const isLast = idx === arr.length - 1;
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center gap-[4px] min-w-0"
-                          >
-                            <span style={{ color: "var(--border2)" }}>
-                              {isLast ? "└─" : "├─"}
-                            </span>
-                            <span style={{ color: "var(--text2)" }}>{key}:</span>
-                            <span
-                              className="truncate font-mono"
-                              style={{ color: "var(--amber)" }}
-                            >
-                              {val}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
                   )}
                 </div>
-              );
-            })}
 
-            {/* Live blinking cursor prompt line */}
-            <div className="flex items-center gap-[6px] text-[10px] pl-[3px] pt-[2px] shrink-0">
-              <span
-                style={{ color: "var(--text3)", flexShrink: 0 }}
-                className="tabular-nums"
-              >
-                {mounted ? formatTime() : "23:01:15"}
-              </span>
+                {/* Expandable Tree Details */}
+                {hasDetails && isExpanded && log.details && (
+                  <div
+                    className="flex flex-col ml-[28px] pl-[6px] border-l my-[2px] text-[9px] leading-[1.5]"
+                    style={{
+                      borderColor: "var(--border2)",
+                      color: "var(--text3)",
+                    }}
+                  >
+                    {Object.entries(log.details).map(([key, val], idx, arr) => {
+                      const isLast = idx === arr.length - 1;
+                      return (
+                        <div
+                          key={key}
+                          className="flex items-center gap-[4px] min-w-0"
+                        >
+                          <span style={{ color: "var(--border2)" }}>
+                            {isLast ? "└─" : "├─"}
+                          </span>
+                          <span style={{ color: "var(--text2)" }}>{key}:</span>
+                          <span
+                            className="truncate font-mono"
+                            style={{ color: "var(--amber)" }}
+                          >
+                            {val}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Live blinking cursor prompt line */}
+          <div className="flex items-center gap-[6px] text-[10px] pl-[3px] pt-[2px] shrink-0">
+            <span
+              style={{ color: "var(--text3)", flexShrink: 0 }}
+              className="tabular-nums"
+            >
+              {mounted ? formatTime() : "23:01:15"}
+            </span>
+            <span
+              style={{
+                width: 24,
+                flexShrink: 0,
+                color: "var(--text3)",
+                fontWeight: 600,
+              }}
+            >
+              SYS
+            </span>
+            <span
+              className="flex items-center gap-[4px] min-w-0"
+              style={{ color: "var(--text3)" }}
+            >
+              <span>_</span>
               <span
                 style={{
-                  width: 24,
-                  flexShrink: 0,
-                  color: "var(--text3)",
-                  fontWeight: 600,
+                  display: "inline-block",
+                  width: 6,
+                  height: 11,
+                  background: "var(--red)",
+                  verticalAlign: "middle",
+                  animation: "cur-blink 1.1s step-end infinite",
                 }}
-              >
-                SYS
-              </span>
-              <span
-                className="flex items-center gap-[4px] min-w-0"
-                style={{ color: "var(--text3)" }}
-              >
-                <span>_</span>
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 6,
-                    height: 11,
-                    background: "var(--red)",
-                    verticalAlign: "middle",
-                    animation: "cur-blink 1.1s step-end infinite",
-                  }}
-                />
-              </span>
-            </div>
+              />
+            </span>
           </div>
-        </PanelBody>
+        </div>
 
         {/* Daemon metrics footer bar */}
         <div

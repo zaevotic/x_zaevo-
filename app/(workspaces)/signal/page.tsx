@@ -305,16 +305,16 @@ export default function TemporaryPage() {
       {/* ── COLUMN 3: CONNECTIONS (CHANNELS, MAIL LOG & SIGNAL) ───── */}
       <div className="flex flex-col gap-[10px] md:col-span-2 xl:col-span-1 min-w-0">
         {/* Top row in Column 3: Channels on the left, Mail log on the right */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px] min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px] min-w-0 sm:h-[280px]">
           {/* CHANNELS PANEL */}
-          <Panel delay={0.35} className="flex flex-col h-full">
+          <Panel delay={0.35} className="flex flex-col h-full overflow-hidden">
             <PanelHead meta="channels.lst">
               <Dagger /> ~/{" "}
               <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
                 CHANNELS
               </b>
             </PanelHead>
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1 min-h-0">
               {CHANNELS.map((c, i) => {
                 const Wrapper = c.href ? "a" : "div";
                 return (
@@ -329,7 +329,7 @@ export default function TemporaryPage() {
                           rel: "noopener noreferrer",
                         }
                       : {})}
-                    className="flex items-center justify-between px-[12px] py-[8px] no-underline group transition-colors hover:bg-[var(--red-hover-tint)]"
+                    className="flex-1 flex items-center justify-between px-[12px] py-[4px] no-underline group transition-colors hover:bg-[var(--red-hover-tint)] min-h-0"
                     style={{
                       borderBottom:
                         i < CHANNELS.length - 1

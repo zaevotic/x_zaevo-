@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Panel, { PanelHead, PanelBody, Dagger } from "@/components/ui/Panel";
 import StatRow from "@/components/sys/dev/dsp";
 import SpotifyPanel from "@/components/sys/signal/spotify";
 import SignalTerminal from "@/components/sys/signal/SignalTerminal";
+import MailLogPanel, { type MailLogHandle } from "@/components/sys/signal/MailLogPanel";
 
 const CHANNELS = [
   {
@@ -51,62 +52,92 @@ export default function TemporaryPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [latestCommit, setLatestCommit] = useState("...");
-  const [mailLogs, setMailLogs] = useState([
-    {
-      time: "14:02",
-      status: "OK",
-      color: "var(--green)",
-      msg: "message received",
-    },
-    {
-      time: "14:03",
-      status: "INF",
-      color: "var(--amber)",
-      msg: "autoreply queued",
-    },
-    {
-      time: "14:03",
-      status: "OK",
-      color: "var(--green)",
-      msg: "sent [250 OK]",
-    },
-  ]);
+  
+  const mailLogRef = useRef<MailLogHandle>(null);
+  const hasConnectedRef = useRef(false);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInputFocus = () => {
+    if (!hasConnectedRef.current) {
+      hasConnectedRef.current = true;
+      mailLogRef.current?.log("SYS", "smtpd: client connection accepted [127.0.0.1:587]", {
+        proto: "ESMTP",
+        tls: "TLSv1.3",
+        cipher: "TLS_AES_256_GCM_SHA384",
+      });
+    }
+  };
+
+  const handleNameBlur = () => {
+    if (name.trim()) {
+      mailLogRef.current?.log("INF", `smtpd: sender identity set: "${name.trim()}"`, {
+        sender: name.trim(),
+        auth: "anonymous-token",
+      });
+    }
+  };
+
+  const handleEmailBlur = () => {
+    if (email.trim()) {
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+      if (isValid) {
+        mailLogRef.current?.log("OK", `smtpd: envelope-from valid: <${email.trim()}>`, {
+          envelope: email.trim(),
+          dkim: "queued",
+        });
+      } else {
+        mailLogRef.current?.log("WRN", `smtpd: envelope syntax unverified: <${email.trim()}>`);
+      }
+    }
+  };
+
+  const handleMessageChange = (val: string) => {
+    setMessage(val);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    
+    if (val.trim()) {
+      typingTimerRef.current = setTimeout(() => {
+        mailLogRef.current?.log("INF", `smtpd: payload buffer staged [${val.length} bytes]`);
+      }, 800);
+    }
+  };
 
   const handleTransmit = () => {
-    if (!message) return;
+    if (!message.trim()) {
+      mailLogRef.current?.log("WRN", "smtpd: transmission aborted [empty payload body]");
+      return;
+    }
 
-    const time = new Date().toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
+    mailLogRef.current?.log("INF", "smtpd: staging transmission envelope...", {
+      sender: name.trim() || "anonymous",
+      envelopeFrom: email.trim() || "guest@terminal",
+      recipient: "zaevotic@proton.me",
+      size: `${message.length} bytes`,
     });
-    setMailLogs((prev) => [
-      ...prev,
-      {
-        time,
-        status: "INF",
-        color: "var(--amber)",
-        msg: "opening mail client...",
-      },
-    ]);
+
+    setTimeout(() => {
+      mailLogRef.current?.log("OK", "dkim: transmission signed [rsa-2048/sha256]");
+    }, 280);
+
+    setTimeout(() => {
+      mailLogRef.current?.log(
+        "OK",
+        "client handover: invoked mailto:zaevotic@proton.me [250 OK]",
+        {
+          id: Math.random().toString(36).slice(2, 8),
+          status: "250 2.0.0 Ok: queued",
+        }
+      );
+    }, 650);
+
+    setTimeout(() => {
+      mailLogRef.current?.log("SYS", "smtpd: socket closed, daemon returned to idle");
+    }, 1500);
 
     const subject = encodeURIComponent(`Message from ${name || "Guest"}`);
     const body = encodeURIComponent(message);
-    window.location.href = `mailto:zaevotic@proton.me?subject=${subject}&body=${body}`;
-
-    setTimeout(() => {
-      setMailLogs((prev) => [
-        ...prev,
-        {
-          time: new Date().toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          status: "OK",
-          color: "var(--green)",
-          msg: "mail client invoked",
-        },
-      ]);
-    }, 1000);
+    const mailtoUrl = `mailto:zaevotic@proton.me?subject=${subject}&body=${body}`;
+    window.open(mailtoUrl, "_blank", "noopener,noreferrer");
   };
 
   useEffect(() => {
@@ -165,6 +196,8 @@ export default function TemporaryPage() {
                 style={inputStyle}
                 placeholder="your name"
                 value={name}
+                onFocus={handleInputFocus}
+                onBlur={handleNameBlur}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
@@ -182,6 +215,8 @@ export default function TemporaryPage() {
                 style={inputStyle}
                 placeholder="your@email.com"
                 value={email}
+                onFocus={handleInputFocus}
+                onBlur={handleEmailBlur}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
@@ -199,7 +234,8 @@ export default function TemporaryPage() {
                 className="flex-1 min-h-[100px] w-full"
                 placeholder="write your transmission here..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onFocus={handleInputFocus}
+                onChange={(e) => handleMessageChange(e.target.value)}
               />
             </div>
 
@@ -343,43 +379,7 @@ export default function TemporaryPage() {
           </Panel>
 
           {/* MAIL LOG PANEL (to the right of Channels) */}
-          <Panel delay={0.4} className="flex flex-col h-full">
-            <PanelHead meta="tail · mail.log">
-              <Dagger /> ~/{" "}
-              <b style={{ color: "var(--text)", letterSpacing: "1px" }}>
-                MAIL
-              </b>
-            </PanelHead>
-            <PanelBody className="flex flex-col gap-[6px] p-[10px_12px] overflow-y-auto">
-              {mailLogs.map((log, i) => (
-                <div
-                  key={i}
-                  className="flex gap-[6px] text-[10px] leading-[1.6] font-mono min-w-0"
-                >
-                  <span style={{ color: "var(--text3)", flexShrink: 0 }}>
-                    {log.time}
-                  </span>
-                  <span
-                    style={{
-                      width: 22,
-                      flexShrink: 0,
-                      color: log.color,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {log.status}
-                  </span>
-                  <span
-                    className="truncate flex-1 min-w-0"
-                    style={{ color: "var(--text2)" }}
-                    title={log.msg}
-                  >
-                    {log.msg}
-                  </span>
-                </div>
-              ))}
-            </PanelBody>
-          </Panel>
+          <MailLogPanel ref={mailLogRef} delay={0.4} />
         </div>
 
         {/* Bottom in Column 3: Signal Terminal */}
